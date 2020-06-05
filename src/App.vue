@@ -1,7 +1,8 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" m="test" />
+    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" class="left" />
+    <HelloWorld msg="Number 2" class="mid" />
+    <HelloWorld msg="Number 3" class="right" />
   </div>
 </template>
 
@@ -25,5 +26,7 @@ export default Vue.extend({
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+  display: flex;
+  flex-direction: row;
 }
 </style>
