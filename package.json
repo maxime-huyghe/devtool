@@ -14,6 +14,8 @@
   },
   "main": "background.js",
   "dependencies": {
+    "tedious": "^4.0.1",
+    "@types/tedious": "^4.0.1",
     "vue": "^2.6.11"
   },
   "devDependencies": {
