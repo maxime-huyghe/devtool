@@ -1,8 +1,8 @@
 {
   "name": "devtool",
   "version": "0.1.0",
-  "author": "Maxime Huyghe",
   "private": true,
+  "author": "Maxime Huyghe",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
@@ -14,17 +14,21 @@
   },
   "main": "background.js",
   "dependencies": {
-    "tedious": "^4.0.1",
-    "@types/tedious": "^4.0.1",
-    "vue": "^2.6.11"
+    "@types/tedious": "4.0.1",
+    "element-ui": "2.13.2",
+    "@types/lodash": "4.14.155",
+    "lodash": "4.17.15",
+    "tedious": "4.0.1",
+    "vue": "^2.6.11",
+    "vuex": "^3.4.0"
   },
   "devDependencies": {
     "@types/node": "^12.0.12",
     "@typescript-eslint/eslint-plugin": "^2.33.0",
     "@typescript-eslint/parser": "^2.33.0",
     "@vue/cli-plugin-babel": "~4.4.0",
-    "@vue/cli-plugin-eslint": "~4.4.0",
     "@vue/cli-plugin-typescript": "~4.4.0",
+    "@vue/cli-plugin-vuex": "~4.4.0",
     "@vue/cli-service": "~4.4.0",
     "@vue/eslint-config-typescript": "^5.0.2",
     "babel-eslint": "^10.1.0",

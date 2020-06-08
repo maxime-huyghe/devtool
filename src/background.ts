@@ -94,7 +94,7 @@ if (isDevelopment) {
     }
 }
 
-import { Connection, Request, TYPES, ConnectionConfig, ColumnValue } from "tedious";
+import { Connection, Request, ConnectionConfig, ColumnValue } from "tedious";
 
 let config: ConnectionConfig = {
     server: 'localhost',
