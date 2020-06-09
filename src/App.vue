@@ -2,7 +2,7 @@
   <div id="app">
     <el-container>
       <el-col :span="6">
-        <Tree msg="Welcome to Your Vue.js + TypeScript App" class="left" />
+        <Tree class="left" />
       </el-col>
       <el-col :span="11">
         <Editor v-model="editorContent" />

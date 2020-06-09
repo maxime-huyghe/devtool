@@ -8,94 +8,77 @@
         <el-button icon="el-icon-download" type="primary">Sauvegarder</el-button>
       </el-col>
     </el-row>
-    <el-row type="flex" :gutter="10">
-      <el-col :span="10"></el-col>
-    </el-row>
 
-    <el-button type="text" icon="el-icon-plus" @click="newNode">Nouveau</el-button>
-    <template v-if="elements.length > 0">
-      <el-tree
-        :data="elements"
-        @node-click="onNodeClick"
-        node-key="id"
-        :expand-on-click-node="false"
-        :default-expand-all="true"
-      >
-        <div class="tree-node" slot-scope="{ node, data }">
-          <span>{{ node.label }}</span>
-          <span>
-            <el-button
-              size="mini"
-              type="text"
-              icon="el-icon-edit"
-              @click="(ev) => showRenameDialog(ev, data)"
-            >Renommer</el-button>
-            <el-button
-              size="mini"
-              type="text"
-              icon="el-icon-plus"
-              @click="(ev) => addNode(ev, data)"
-            >Nouveau</el-button>
-            <el-button
-              size="mini"
-              type="text"
-              icon="el-icon-delete"
-              @click="(ev) => removeNode(ev, node)"
-            >Supprimer</el-button>
-          </span>
-        </div>
-      </el-tree>
-    </template>
+    <el-button
+      v-if="elements.length == 0"
+      type="text"
+      size="mini"
+      icon="el-icon-plus"
+      @click="newNode"
+    >Nouveau</el-button>
 
-    <h1>{{ msg }}</h1>
-    <button @click="log">test</button>
-
-    <!-- Rename dialog -->
-    <!-- <el-button type="text" @click="showDialog">open a Form nested Dialog</el-button> -->
-    <el-dialog
-      title="Shipping address"
-      :visible.sync="renameDialog.visible"
-      :before-close="onCloseRenameDialog"
+    <el-tree
+      v-else
+      :data="elements"
+      @node-click="onNodeClick"
+      node-key="id"
+      :expand-on-click-node="false"
+      :default-expand-all="true"
     >
-      <el-form label-width="120px">
-        <el-form-item label="Nouveau nom">
-          <el-input type="text" v-model="renameDialog.newLabel"></el-input>
-        </el-form-item>
-      </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="onCloseRenameDialog">Cancel</el-button>
-        <el-button type="primary" @click="commitRename">Confirm</el-button>
-      </span>
-    </el-dialog>
+      <!-- Tree node content -->
+      <div class="tree-node" slot-scope="{ node, data }">
+        <!-- Name -->
+        <EditableName v-model.lazy.trim="data.label" />
+
+        <!-- Buttons -->
+        <span>
+          <!-- New -->
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-plus"
+            @click="(ev) => addChild(ev, node)"
+          >Enfant</el-button>
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-plus"
+            @click="(ev) => addSibling(ev, node)"
+          >Frère</el-button>
+
+          <!-- Remove -->
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-delete"
+            @click="(ev) => removeNode(ev, node)"
+          >Supprimer</el-button>
+        </span>
+      </div>
+    </el-tree>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import { TreeNode, TreeData } from "element-ui/types/tree";
+import EditableName from "./EditableName.vue";
 
 let id = 0;
 
 export default Vue.extend({
   name: "Tree",
-  props: {
-    msg: String
+  components: {
+    EditableName
   },
+  props: {},
 
   data: () => ({
     elements: [] as TreeData[],
-    renameDialog: { newLabel: "", id: null, visible: false } as {
-      id: string | null;
-      newLabel: string;
-      visible: boolean;
-    }
+    renameId: null as string | null
   }),
 
   methods: {
-    log() {
-      console.log(this.msg);
-    },
-
     save() {
       console.log("save");
     },
@@ -105,24 +88,36 @@ export default Vue.extend({
     },
 
     newNode() {
-      this.elements.push({
-        label: "test",
+      let newNode = {
+        label: "",
         children: [],
         id: id++
-      });
+      };
+      this.elements.push(newNode);
+      this.toggleRename(newNode);
     },
 
-    addNode(ev: Event, data: TreeData) {
-      if (ev) {
-        ev.preventDefault();
+    addChild(ev: Event, node: TreeNode<string, TreeData>) {
+      console.log("addChild");
+      if (ev) ev.preventDefault();
+
+      const newChild = { id: id++, label: "", children: [] };
+      if (!node.data.children) {
+        node.data.children = [];
       }
 
-      const newChild = { id: id++, label: "testtest", children: [] };
-      if (!data.children) {
-        // this.$set(data, "children", []);
-        data.children = [];
-      }
-      data.children?.push(newChild);
+      node.data.children?.push(newChild);
+      this.toggleRename(newChild);
+    },
+
+    addSibling(ev: Event, node: TreeNode<string, TreeData>) {
+      if (ev) ev.preventDefault();
+
+      let siblings = node.parent?.data.children ?? this.elements;
+      const newSibling = { id: id++, label: "", children: [] };
+
+      siblings.push(newSibling);
+      this.toggleRename(newSibling);
     },
 
     removeNode(ev: Event, node: TreeNode<string, TreeData>) {
@@ -150,47 +145,15 @@ export default Vue.extend({
       // console.log(component);
     },
 
-    showRenameDialog(ev: Event, data: TreeData) {
-      console.log("show");
-      if (ev) ev.preventDefault();
-
-      this.renameDialog.id = data.id;
-      if (data.label) this.renameDialog.newLabel = data.label;
-      console.log(this.renameDialog.id);
-      this.renameDialog.visible = true;
-    },
-
-    onCloseRenameDialog() {
-      this.renameDialog = { newLabel: "", id: null, visible: false };
-      console.log("close");
-    },
-
-    commitRename(ev: Event) {
-      console.log("rename");
-      if (ev) {
-        ev.preventDefault();
+    toggleRename(data: TreeData) {
+      if (this.renameId == null) {
+        this.renameId = data.id;
+      } else if (this.renameId == data.id) {
+        this.renameId = null;
+      } else {
+        // renameId == another id
+        this.renameId = data.id;
       }
-
-      if (this.renameDialog.id == null) {
-        console.log("rename dialog state id should not be null!");
-        return;
-      }
-
-      let dialog = this.renameDialog;
-      try {
-        // an exception is thrown in the loop to end it early. I'm ashamed.
-        this.elements.forEach(el =>
-          this.treeForeach(el, node => {
-            if (node.id == dialog.id) {
-              node.label = dialog.newLabel;
-              throw "break";
-            }
-          })
-        );
-      } catch (error) {}
-
-      this.renameDialog = { newLabel: "", id: null, visible: false };
-      console.log("rename2");
     },
 
     /** Calls `fn` on each element in the tree */
@@ -223,5 +186,8 @@ export default Vue.extend({
   align-items: center;
   justify-content: space-between;
   margin: 10px;
+}
+.edit-btn {
+  margin-right: 10px;
 }
 </style>
