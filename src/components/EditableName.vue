@@ -11,9 +11,7 @@
       :value="value"
       ref="input"
       placeholder="Entrez un nom"
-    >
-      <el-button slot="append" icon="el-icon-check" @click="toggleEditing" />
-    </el-input>
+    />
 
     <span v-else @click="toggleEditing">{{value}}</span>
   </span>

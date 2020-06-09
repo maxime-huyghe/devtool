@@ -32,6 +32,13 @@
 
         <!-- Buttons -->
         <span>
+          <!-- On click -->
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-document"
+            @click="onNodeClick(data, node, undefined)"
+          >Ouvrir</el-button>
           <!-- New -->
           <el-button
             size="mini"
@@ -71,7 +78,9 @@ export default Vue.extend({
   components: {
     EditableName
   },
-  props: {},
+  props: {
+    onElementClicked: Function
+  },
 
   data: () => ({
     elements: [] as TreeData[],
@@ -139,10 +148,7 @@ export default Vue.extend({
       node: TreeNode<string, TreeData>,
       component: any
     ) {
-      // console.log("node clicked");
-      // console.log(nodeData);
-      // console.log(node);
-      // console.log(component);
+      this.onElementClicked(nodeData.id);
     },
 
     toggleRename(data: TreeData) {

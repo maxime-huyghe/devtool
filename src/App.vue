@@ -2,7 +2,7 @@
   <div id="app">
     <el-container>
       <el-col :span="6">
-        <Tree class="left" />
+        <Tree class="left" :onElementClicked="onElementClicked" />
       </el-col>
       <el-col :span="11">
         <Editor v-model="editorContent" />
@@ -30,12 +30,20 @@ export default Vue.extend({
     Editor,
     Database
   },
+
   data: () => ({
     editorContent: ""
   }),
+
   watch: {
     editorContent: (newContent: any, oldContent: any) => {
       console.log(newContent);
+    }
+  },
+
+  methods: {
+    onElementClicked(id: string) {
+      console.log(id);
     }
   }
 });
