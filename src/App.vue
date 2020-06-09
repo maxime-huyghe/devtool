@@ -8,7 +8,7 @@
         <Editor v-model="editorContent" />
       </el-col>
       <el-col :span="7">
-        <Database />
+        <Database class="database" />
       </el-col>
     </el-container>
   </div>
@@ -59,5 +59,8 @@ body {
 }
 .hello {
   border: 1px black;
+}
+.database {
+  height: 100vh;
 }
 </style>
