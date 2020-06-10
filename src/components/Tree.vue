@@ -104,7 +104,7 @@ export default Vue.extend({
       let newNode = {
         label: "",
         children: [],
-        id: this.id++
+        id: String(this.id++)
       };
       this.elements.push(newNode);
       this.toggleRename(newNode);
@@ -114,7 +114,7 @@ export default Vue.extend({
       console.log("addChild");
       if (ev) ev.preventDefault();
 
-      const newChild = { id: this.id++, label: "", children: [] };
+      const newChild = { id: String(this.id++), label: "", children: [] };
       if (!node.data.children) {
         node.data.children = [];
       }
@@ -127,7 +127,7 @@ export default Vue.extend({
       if (ev) ev.preventDefault();
 
       let siblings = node.parent?.data.children ?? this.elements;
-      const newSibling = { id: this.id++, label: "", children: [] };
+      const newSibling = { id: String(this.id++), label: "", children: [] };
 
       siblings.push(newSibling);
       this.toggleRename(newSibling);

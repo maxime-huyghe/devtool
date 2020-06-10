@@ -5,7 +5,7 @@
         <Tree class="left" :onElementClicked="onTreeElementClicked" />
       </el-col>
       <el-col :span="11">
-        <Editor v-if="currentExampleId != null" v-model="currentExample" />
+        <Editor v-if="currentExampleId != null" :editId="currentExampleId" v-model="examples" />
       </el-col>
       <el-col :span="7">
         <Database class="database" />
@@ -20,7 +20,6 @@ import HelloWorld from "./components/HelloWorld.vue";
 import Tree from "./components/Tree.vue";
 import Editor from "./components/Editor.vue";
 import Database from "./components/Database.vue";
-// import _ from "lodash";
 
 export default Vue.extend({
   name: "App",
@@ -48,19 +47,6 @@ export default Vue.extend({
 
       if (this.examples[this.currentExampleId] == undefined) {
         this.examples[this.currentExampleId] = "";
-      }
-    }
-  },
-
-  computed: {
-    currentExample: {
-      get() {
-        if (this.currentExampleId != null)
-          return this.examples[this.currentExampleId];
-      },
-      set(newValue: string) {
-        if (this.currentExampleId != null)
-          this.examples[this.currentExampleId] = newValue;
       }
     }
   }
