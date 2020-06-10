@@ -2,10 +2,10 @@
   <div id="app">
     <el-container>
       <el-col :span="6">
-        <Tree class="left" :onElementClicked="onElementClicked" />
+        <Tree class="left" :onElementClicked="onTreeElementClicked" />
       </el-col>
       <el-col :span="11">
-        <Editor v-model="editorContent" />
+        <Editor v-if="currentExampleId != null" v-model="currentExample" />
       </el-col>
       <el-col :span="7">
         <Database class="database" />
@@ -32,18 +32,36 @@ export default Vue.extend({
   },
 
   data: () => ({
-    editorContent: ""
+    examples: {
+      "0": `function foo(items) {
+  var x = "All this is syntax highlighted";
+  return x;
+}`
+    } as Record<string, string>,
+    currentExampleId: null as string | null
   }),
 
-  watch: {
-    editorContent: (newContent: any, oldContent: any) => {
-      console.log(newContent);
+  methods: {
+    onTreeElementClicked(id: string) {
+      console.log(id);
+      this.currentExampleId = id;
+
+      if (this.examples[this.currentExampleId] == undefined) {
+        this.examples[this.currentExampleId] = "";
+      }
     }
   },
 
-  methods: {
-    onElementClicked(id: string) {
-      console.log(id);
+  computed: {
+    currentExample: {
+      get() {
+        if (this.currentExampleId != null)
+          return this.examples[this.currentExampleId];
+      },
+      set(newValue: string) {
+        if (this.currentExampleId != null)
+          this.examples[this.currentExampleId] = newValue;
+      }
     }
   }
 });
