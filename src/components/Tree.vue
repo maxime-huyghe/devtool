@@ -26,9 +26,13 @@
       :default-expand-all="true"
     >
       <!-- Tree node content -->
-      <div class="tree-node" slot-scope="{ node, data }">
+      <div
+        class="tree-node"
+        slot-scope="{ node, data }"
+        :class="{ selected: data.id === lastSelected }"
+      >
         <!-- Name -->
-        <EditableName v-model.lazy.trim="data.label" />
+        <EditableName v-model.trim="data.label" />
 
         <!-- Buttons -->
         <span>
@@ -71,8 +75,6 @@ import Vue from "vue";
 import { TreeNode, TreeData } from "element-ui/types/tree";
 import EditableName from "./EditableName.vue";
 
-let id = 0;
-
 export default Vue.extend({
   name: "Tree",
   components: {
@@ -84,7 +86,9 @@ export default Vue.extend({
 
   data: () => ({
     elements: [] as TreeData[],
-    renameId: null as string | null
+    renameId: null as string | null,
+    id: 0,
+    lastSelected: null
   }),
 
   methods: {
@@ -100,7 +104,7 @@ export default Vue.extend({
       let newNode = {
         label: "",
         children: [],
-        id: id++
+        id: this.id++
       };
       this.elements.push(newNode);
       this.toggleRename(newNode);
@@ -110,7 +114,7 @@ export default Vue.extend({
       console.log("addChild");
       if (ev) ev.preventDefault();
 
-      const newChild = { id: id++, label: "", children: [] };
+      const newChild = { id: this.id++, label: "", children: [] };
       if (!node.data.children) {
         node.data.children = [];
       }
@@ -123,7 +127,7 @@ export default Vue.extend({
       if (ev) ev.preventDefault();
 
       let siblings = node.parent?.data.children ?? this.elements;
-      const newSibling = { id: id++, label: "", children: [] };
+      const newSibling = { id: this.id++, label: "", children: [] };
 
       siblings.push(newSibling);
       this.toggleRename(newSibling);
@@ -148,6 +152,7 @@ export default Vue.extend({
       node: TreeNode<string, TreeData>,
       component: any
     ) {
+      this.lastSelected = nodeData.id;
       this.onElementClicked(nodeData.id);
     },
 
@@ -195,5 +200,8 @@ export default Vue.extend({
 }
 .edit-btn {
   margin-right: 10px;
+}
+.selected {
+  background-color: #f0f0f0;
 }
 </style>
