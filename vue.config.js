@@ -8,6 +8,7 @@ module.exports = {
     }
   },
   configureWebpack: {
+    devtool: 'source-map',
     plugins: [
       new webpack.ExternalsPlugin('commonjs', [
         'electron'

@@ -1,15 +1,18 @@
 'use strict'
-
 import { join } from 'path'
-declare var __static: string;
-
-// Main electron thread. Mostly copy-pasted code.
-
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain } from 'electron'
+import { installCallbacks } from './database/databaseBackground'
 import {
     createProtocol,
     installVueDevtools,
 } from 'vue-cli-plugin-electron-builder/lib'
+
+declare var __static: string;
+
+installCallbacks(ipcMain)
+
+// Main electron thread. Mostly copy-pasted code.
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -44,6 +47,8 @@ function createWindow() {
         win = null
     })
 }
+
+app.allowRendererProcessReuse = true
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
@@ -98,12 +103,3 @@ if (isDevelopment) {
         })
     }
 }
-
-import { } from "./database";
-
-import { ipcMain } from "electron";
-
-ipcMain.on('asynchronous-message', (ev, ...args) => {
-    console.log(args)
-    ev.reply('asynchronous-reply', 'pong')
-})
