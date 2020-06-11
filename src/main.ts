@@ -13,3 +13,16 @@ let app = new Vue({
     store,
     el: '#app'
 })
+
+// const electron = window.require('electron')
+// const ipcRenderer = electron.ipcRenderer
+// import electron from 'electron';
+import { ipcRenderer } from "electron";
+
+ipcRenderer.on('asynchronous-reply', (ev, arg) => {
+    console.log(arg)
+})
+
+ipcRenderer.send('asynchronous-message', 'ping')
+
+// TODO copier coller dant dt

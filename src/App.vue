@@ -16,7 +16,6 @@
 
 <script lang="ts">
 import Vue from "vue";
-import HelloWorld from "./components/HelloWorld.vue";
 import Tree from "./components/Tree.vue";
 import Editor from "./components/Editor.vue";
 import Database from "./components/Database.vue";
@@ -24,7 +23,6 @@ import Database from "./components/Database.vue";
 export default Vue.extend({
   name: "App",
   components: {
-    HelloWorld,
     Tree,
     Editor,
     Database

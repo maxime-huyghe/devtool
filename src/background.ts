@@ -1,5 +1,7 @@
 'use strict'
 
+// import { join } from 'path'
+
 // Main electron thread. Mostly copy-pasted code.
 
 import { app, protocol, BrowserWindow } from 'electron'
@@ -22,7 +24,8 @@ function createWindow() {
         width: 800, height: 600, webPreferences: {
             // Use pluginOptions.nodeIntegration, leave this alone
             // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
-            nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION as boolean | undefined
+            nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION as boolean | undefined,
+            // preload: join(__dirname, 'preload.js')
         }
     })
 
@@ -95,50 +98,11 @@ if (isDevelopment) {
     }
 }
 
-import { Connection, Request, ConnectionConfig, ColumnValue } from "tedious";
+import { } from "./database";
 
-let config: ConnectionConfig = {
-    server: 'localhost',
-    authentication: {
-        type: 'default',
-        options: {
-            userName: 'SA',
-            password: 'P@55w0rd123',
-        },
-    },
-    options: {
-        database: 'test',
-        trustServerCertificate: true,
-        rowCollectionOnRequestCompletion: true,
-    },
-}
+import { ipcMain } from "electron";
 
-let connection: Connection = new Connection(config)
-
-connection.on('connect', async (err) => {
-    if (err) {
-        console.log(err)
-    } else {
-        console.log('Connected')
-        try {
-            let rows = await executeSql(connection, 'select * from test')
-            rows.forEach((columns) => columns.forEach((col) => console.log(col.value)))
-        } catch (error) {
-            console.log(error)
-        }
-    }
+ipcMain.on('asynchronous-message', (ev, ...args) => {
+    console.log(args)
+    ev.reply('asynchronous-reply', 'pong')
 })
-
-async function executeSql(cn: Connection, query: string): Promise<ColumnValue[][]> {
-    return new Promise((resolve, reject) => {
-        let request = new Request(query, async (err, _rowCount, rows) => {
-            if (err) {
-                reject(err);
-            }
-
-            resolve(rows as ColumnValue[][])
-        });
-
-        connection.execSql(request);
-    })
-}
