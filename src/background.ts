@@ -1,6 +1,7 @@
 'use strict'
 
-// import { join } from 'path'
+import { join } from 'path'
+declare var __static: string;
 
 // Main electron thread. Mostly copy-pasted code.
 
@@ -25,7 +26,7 @@ function createWindow() {
             // Use pluginOptions.nodeIntegration, leave this alone
             // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
             nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION as boolean | undefined,
-            // preload: join(__dirname, 'preload.js')
+            preload: join(__static, 'preload.js')
         }
     })
 
