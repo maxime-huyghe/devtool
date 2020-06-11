@@ -15,6 +15,7 @@ export function installCallbacks(ipcMain: IpcMain) {
 }
 
 const connectionHandler = async (event: IpcMainInvokeEvent, url: string, username: string, password: string): Promise<void> => {
+    console.log('connect')
     let config: ConnectionConfig = {
         server: url,
         authentication: {
@@ -41,6 +42,7 @@ const connectionHandler = async (event: IpcMainInvokeEvent, url: string, usernam
 
 const requestHandler = (event: IpcMainInvokeEvent, rq: string): Promise<ColumnValue[][]> =>
     new Promise((resolve, reject) => {
+        console.log('request')
         let request = new Request(rq, (err, _rowCount, rows) => {
             if (err) {
                 reject((err));
@@ -52,19 +54,21 @@ const requestHandler = (event: IpcMainInvokeEvent, rq: string): Promise<ColumnVa
         connection!.execSql(request);
     })
 
-const closeHandler = (event: IpcMainInvokeEvent): Promise<void> => {
-    if (connection) connection.close()
+const closeHandler = (event: IpcMainInvokeEvent): Promise<void> =>
+    new Promise((resolve, reject) => {
+        console.log('close')
 
-    return new Promise((resolve, reject) => {
         if (connection) {
             connection.on('end', () => {
                 resolve()
             })
+            connection.close()
+            connection = null
         } else {
             resolve()
         }
     })
-}
+
 
 let newConnection = async (config: ConnectionConfig): Promise<Connection> => new Promise((resolve, reject) => {
     let connection = new Connection(config)

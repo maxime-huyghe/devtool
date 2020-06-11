@@ -1,7 +1,7 @@
 import { IpcRenderer } from 'electron'
 
 /** Redefinition of tedious' ColumValue because it cannot be imported in the renderer process */
-type ColumnValue = {
+export type ColumnValue = {
     metadata: {
         colName: string;
         type: { name: string };

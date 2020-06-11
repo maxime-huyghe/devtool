@@ -19,15 +19,6 @@ let app = new Vue({
     el: '#app'
 })
 
-let main = async () => {
-    try {
-        await connect(ipcRenderer, 'localhost', 'SA', 'P@55w0rd123')
-        await request(ipcRenderer, 'use test')
-        let resp = await request(ipcRenderer, 'select * from test')
-        console.dir(resp.map(row => row.map(col => col.value)))
-        await close(ipcRenderer)
-    } catch (err) {
-        console.error(err)
-    }
+window.onbeforeunload = (e: BeforeUnloadEvent) => {
+    close(ipcRenderer)
 }
-main()
