@@ -2,7 +2,13 @@
   <div id="app">
     <!-- Tree -->
     <span class="col left">
-      <Tree :onElementClicked="onTreeElementClicked" />
+      <Tree
+        :onElementClicked="onTreeElementClicked"
+        :elements="treeElements"
+        :onElementsChange="(newElts) => treeElements = newElts"
+        :onSave="save"
+        :onLoad="load"
+      />
     </span>
 
     <!-- Editor -->
@@ -21,10 +27,7 @@
       :icon="databaseExpanded ? 'el-icon-arrow-right' : 'el-icon-arrow-left'"
       type="text"
       id="expand"
-    >
-      <!-- <template v-if="databaseExpanded">&gt;</template>
-      <template v-else>&lt;</template>-->
-    </el-button>
+    ></el-button>
 
     <!-- Database -->
     <span class="col right" :style="databaseStyle">
@@ -38,9 +41,13 @@ import Vue from "vue";
 import Tree from "./components/Tree.vue";
 import Editor from "./components/Editor.vue";
 import Database from "./components/Database.vue";
+import { TreeData } from "element-ui/types/tree";
+
+let a = "";
 
 export default Vue.extend({
   name: "App",
+
   components: {
     Tree,
     Editor,
@@ -55,18 +62,42 @@ export default Vue.extend({
 }`
     } as Record<string, string>,
     currentExampleId: null as string | null,
+    treeElements: [] as TreeData[],
     editorSelection: "",
     databaseExpanded: false
   }),
 
   methods: {
     onTreeElementClicked(id: string) {
-      console.log(id);
       this.currentExampleId = id;
 
       if (this.examples[this.currentExampleId] == undefined) {
         this.examples[this.currentExampleId] = "";
       }
+    },
+
+    save() {
+      a = JSON.stringify({
+        tree: this.treeElements,
+        examples: this.examples
+      });
+    },
+
+    load() {
+      console.log(a);
+      let parsed = JSON.parse(a);
+      let properties = Object.getOwnPropertyNames(parsed);
+
+      if (!properties.includes("tree") || !properties.includes("examples"))
+        throw "invalid file format";
+
+      let hasKeys = parsed as { tree: any; examples: any };
+
+      if (!Array.isArray(hasKeys.tree) || typeof hasKeys.examples != "object")
+        throw "invalid file format";
+
+      this.treeElements = hasKeys.tree;
+      this.examples = hasKeys.examples;
     }
   },
 

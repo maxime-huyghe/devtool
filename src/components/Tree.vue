@@ -2,8 +2,8 @@
   <div class="hello">
     <el-form>
       <el-form-item>
-        <el-button icon="el-icon-upload2" type="primary">Charger</el-button>
-        <el-button icon="el-icon-download" type="primary">Sauvegarder</el-button>
+        <el-button @click="onLoad" icon="el-icon-upload2" type="primary">Charger</el-button>
+        <el-button @click="onSave" icon="el-icon-download" type="primary">Sauvegarder</el-button>
       </el-form-item>
     </el-form>
 
@@ -75,41 +75,47 @@ import EditableName from "./EditableName.vue";
 
 export default Vue.extend({
   name: "Tree",
+
   components: {
     EditableName
   },
+
   props: {
-    onElementClicked: Function
+    onElementClicked: Function,
+    elements: Array, // of TreeData
+    // Using this instead of v-model because it's simpler here
+    onElementsChange: Function,
+    onSave: Function,
+    onLoad: Function
   },
 
-  data: () => ({
-    elements: [] as TreeData[],
-    renameId: null as string | null,
-    id: 0,
-    lastSelected: null
-  }),
+  data: function() {
+    return {
+      elements_: this.elements as TreeData[],
+      renameId: null as string | null,
+      id: 0,
+      lastSelected: null
+    };
+  },
+
+  watch: {
+    elements_(newElts) {
+      this.onElementsChange(newElts);
+    }
+  },
 
   methods: {
-    save() {
-      console.log("save");
-    },
-
-    load() {
-      console.log("load");
-    },
-
     newNode() {
       let newNode = {
         label: "",
         children: [],
         id: String(this.id++)
       };
-      this.elements.push(newNode);
+      this.elements_.push(newNode);
       this.toggleRename(newNode);
     },
 
     addChild(ev: Event, node: TreeNode<string, TreeData>) {
-      console.log("addChild");
       if (ev) ev.preventDefault();
 
       const newChild = { id: String(this.id++), label: "", children: [] };
@@ -124,7 +130,7 @@ export default Vue.extend({
     addSibling(ev: Event, node: TreeNode<string, TreeData>) {
       if (ev) ev.preventDefault();
 
-      let siblings = node.parent?.data.children ?? this.elements;
+      let siblings = node.parent?.data.children ?? this.elements_;
       const newSibling = { id: String(this.id++), label: "", children: [] };
 
       siblings.push(newSibling);
@@ -132,13 +138,11 @@ export default Vue.extend({
     },
 
     removeNode(ev: Event, node: TreeNode<string, TreeData>) {
-      console.log("remove");
-
       if (ev) {
         ev.preventDefault();
       }
 
-      this.elements = this.elements
+      this.elements_ = this.elements_
         .map(tree =>
           this.treeFilter(tree, treeElt => treeElt.id != node.data.id)
         )

@@ -33,7 +33,6 @@ export default Vue.extend({
   mounted() {
     this.editor = Ace.edit("editor");
     this.editor.session.setMode("ace/mode/javascript");
-    console.log(this.contents);
     this.editor.setValue(this.edited);
 
     this.editor.on("change", () => {
