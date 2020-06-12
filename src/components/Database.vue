@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="div">
     <!-- Loading -->
     <template v-if="loading">
       Loading
@@ -8,19 +8,46 @@
     <!-- Not loading -->
     <template v-else>
       <template v-if="connected">
-        <el-input v-model="request" placeholder="requête"></el-input>
-        <el-button @click="execute" type="success">Exécuter</el-button>
-        <el-button @click="close" type="danger">Fermer la connexion</el-button>
+        <el-form label-position="right" label-width="110px">
+          <el-form-item>
+            <el-button @click="close" type="danger">Fermer la connexion</el-button>
+          </el-form-item>
+          <el-form-item label="requête :">
+            <el-input clearable v-model="request" type="textarea" placeholder="requête :"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="execute(request)" icon="el-icon-search" type="success">Exécuter</el-button>
+          </el-form-item>
+          <el-form-item label="sélection :">
+            <template v-if="selection">{{ selection }}</template>
+            <template v-else>
+              <i class="el-icon-error" />
+            </template>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="execute(selection)" icon="el-icon-search" type="success">Exécuter</el-button>
+          </el-form-item>
+        </el-form>
       </template>
       <template v-else>
-        <el-input v-model="url" placeholder="url"></el-input>
-        <el-input v-model="login" placeholder="login"></el-input>
-        <el-input v-model="password" placeholder="mot de passe"></el-input>
-        <el-button @click="connect" type="primary">Se connecter</el-button>
+        <el-form :model="credentials" label-position="right" label-width="110px">
+          <el-form-item label="url :">
+            <el-input v-model="credentials.url" placeholder="url"></el-input>
+          </el-form-item>
+          <el-form-item label="login :">
+            <el-input v-model="credentials.login" placeholder="login"></el-input>
+          </el-form-item>
+          <el-form-item label="mot de passe :">
+            <el-input v-model="credentials.password" placeholder="mot de passe"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="connect" type="primary">Se connecter</el-button>
+          </el-form-item>
+        </el-form>
       </template>
       <template v-if="tableData.length > 0">
         <el-alert :title="this.resultRequest" type="info" :closable="false"></el-alert>
-        <el-table :data="tableData" height="80%">
+        <el-table :data="tableData">
           <el-table-column
             v-for="column in columnNames"
             :prop="column"
@@ -29,9 +56,6 @@
           ></el-table-column>
         </el-table>
       </template>
-    </template>
-  </div>
-</template>
     </template>
   </div>
 </template>
@@ -52,14 +76,20 @@ let fn = async () => {};
 export default Vue.extend({
   name: "Database",
 
+  props: {
+    selection: String
+  },
+
   data: () => ({
     loading: false,
     columnNames: [] as string[],
     tableData: [] as Record<string, string>[],
     resultRequest: "",
-    url: "localhost",
-    login: "SA",
-    password: "P@55w0rd123",
+    credentials: {
+      url: "localhost",
+      login: "SA",
+      password: "P@55w0rd123"
+    },
     connected: false,
     request: "select * from test"
   }),
@@ -77,7 +107,12 @@ export default Vue.extend({
     async connect() {
       try {
         this.loading = true;
-        await connect(ipcRenderer, this.url, this.login, this.password);
+        await connect(
+          ipcRenderer,
+          this.credentials.url,
+          this.credentials.login,
+          this.credentials.password
+        );
         this.connected = true;
       } catch (err) {
         this.connected = false;
@@ -86,11 +121,11 @@ export default Vue.extend({
       this.loading = false;
     },
 
-    async execute() {
+    async execute(rq: string) {
       this.loading = true;
       try {
-        let resp = await request(ipcRenderer, this.request);
-        this.resultRequest = this.request;
+        let resp = await request(ipcRenderer, rq);
+        this.resultRequest = rq;
         this.tableData = resp.map(row =>
           row.reduce(
             (acc, current) => ({
@@ -127,8 +162,7 @@ export default Vue.extend({
 </script>
 
 <style scoped>
-.container {
-  height: 90vh;
-  overflow: auto;
+#div {
+  margin: 10px;
 }
 </style>

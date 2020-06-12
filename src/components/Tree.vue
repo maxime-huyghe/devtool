@@ -1,13 +1,11 @@
 <template>
   <div class="hello">
-    <el-row type="flex" :gutter="10">
-      <el-col :span="6">
+    <el-form>
+      <el-form-item>
         <el-button icon="el-icon-upload2" type="primary">Charger</el-button>
-      </el-col>
-      <el-col>
         <el-button icon="el-icon-download" type="primary">Sauvegarder</el-button>
-      </el-col>
-    </el-row>
+      </el-form-item>
+    </el-form>
 
     <el-button
       v-if="elements.length == 0"

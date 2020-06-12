@@ -42,6 +42,12 @@ export default Vue.extend({
       this.edited = value;
       this.$emit(event, this.contents);
     });
+
+    this.editor.selection.on("changeSelection", () => {
+      if (!this.editor) return;
+      let text = this.editor.getSelectedText();
+      this.$emit("selection", text);
+    });
   },
 
   methods: {
