@@ -82,7 +82,7 @@ export default Vue.extend({
 
   data: function() {
     return {
-      /** IDs should be numbers !!! */
+      /** IDs (in TreeData objects) should be written as numbers but read as strings */
       elements_: this.elements as TreeData[],
       renameId: null as string | null,
       lastSelected: null
@@ -90,6 +90,7 @@ export default Vue.extend({
   },
 
   watch: {
+    /// Having two watchers like this is way simpler than using v-model
     elements(newElts) {
       this.elements_ = newElts;
     },
@@ -99,6 +100,7 @@ export default Vue.extend({
   },
 
   methods: {
+    // Generates a new unique ID
     newID(): number {
       let occupiedNumericIDs: number[] = [];
       this.elements_.forEach(subtree => {
@@ -108,9 +110,11 @@ export default Vue.extend({
         });
       });
 
-      console.log(occupiedNumericIDs);
       if (occupiedNumericIDs.length == 0) return 0;
-      if (occupiedNumericIDs.length == 1) return occupiedNumericIDs[0] + 1;
+      if (occupiedNumericIDs.length == 1) {
+        if (occupiedNumericIDs[0] == 0) return 1;
+        else return 0;
+      }
 
       occupiedNumericIDs.sort();
       let firstFreeID: number | undefined;

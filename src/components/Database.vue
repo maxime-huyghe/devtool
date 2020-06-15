@@ -13,7 +13,7 @@
             <el-button @click="close" type="danger">Fermer la connexion</el-button>
           </el-form-item>
           <el-form-item label="requête :">
-            <el-input clearable v-model="request" type="textarea" placeholder="requête :"></el-input>
+            <el-input clearable v-model="request" type="textarea" placeholder="requête"></el-input>
           </el-form-item>
           <el-form-item>
             <el-button @click="execute(request)" icon="el-icon-search" type="success">Exécuter</el-button>
@@ -39,6 +39,9 @@
           </el-form-item>
           <el-form-item label="mot de passe :">
             <el-input v-model="credentials.password" show-password placeholder="mot de passe" />
+          </el-form-item>
+          <el-form-item label="base :">
+            <el-input v-model="credentials.database" placeholder="base de données" />
           </el-form-item>
           <el-form-item>
             <el-button @click="connect" type="primary">Se connecter</el-button>
@@ -89,7 +92,8 @@ export default Vue.extend({
     credentials: {
       url: "",
       login: "",
-      password: ""
+      password: "",
+      database: ""
     },
     connected: false,
     request: ""
@@ -112,7 +116,8 @@ export default Vue.extend({
           ipcRenderer,
           this.credentials.url,
           this.credentials.login,
-          this.credentials.password
+          this.credentials.password,
+          this.credentials.database
         );
         this.connected = true;
       } catch (err) {
