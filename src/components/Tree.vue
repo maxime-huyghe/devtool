@@ -1,12 +1,5 @@
 <template>
   <div class="hello">
-    <el-form>
-      <el-form-item>
-        <el-button @click="onLoad" icon="el-icon-upload2" type="primary">Charger</el-button>
-        <el-button @click="onSave" icon="el-icon-download" type="primary">Sauvegarder</el-button>
-      </el-form-item>
-    </el-form>
-
     <el-button
       v-if="elements.length == 0"
       type="text"
@@ -84,32 +77,63 @@ export default Vue.extend({
     onElementClicked: Function,
     elements: Array, // of TreeData
     // Using this instead of v-model because it's simpler here
-    onElementsChange: Function,
-    onSave: Function,
-    onLoad: Function
+    onElementsChange: Function
   },
 
   data: function() {
     return {
+      /** IDs should be numbers !!! */
       elements_: this.elements as TreeData[],
       renameId: null as string | null,
-      id: 0,
       lastSelected: null
     };
   },
 
   watch: {
+    elements(newElts) {
+      this.elements_ = newElts;
+    },
     elements_(newElts) {
       this.onElementsChange(newElts);
     }
   },
 
   methods: {
+    newID(): number {
+      let occupiedNumericIDs: number[] = [];
+      this.elements_.forEach(subtree => {
+        this.treeForEach(subtree, node => {
+          const asNumber = Number(node.id);
+          if (Number.isInteger(asNumber)) occupiedNumericIDs.push(asNumber);
+        });
+      });
+
+      console.log(occupiedNumericIDs);
+      if (occupiedNumericIDs.length == 0) return 0;
+      if (occupiedNumericIDs.length == 1) return occupiedNumericIDs[0] + 1;
+
+      occupiedNumericIDs.sort();
+      let firstFreeID: number | undefined;
+
+      for (let i = 0; i < occupiedNumericIDs.length - 1; i++) {
+        const current = occupiedNumericIDs[i];
+        const next = occupiedNumericIDs[i + 1];
+        // if there is a gap of more than one, we can use it
+        // this gives a valid ID because the array is sorted
+        if (next - current != 1) firstFreeID = current + 1;
+      }
+
+      if (!firstFreeID)
+        firstFreeID = occupiedNumericIDs[occupiedNumericIDs.length - 1] + 1;
+
+      return firstFreeID;
+    },
+
     newNode() {
       let newNode = {
         label: "",
         children: [],
-        id: String(this.id++)
+        id: String(this.newID())
       };
       this.elements_.push(newNode);
       this.toggleRename(newNode);
@@ -118,7 +142,7 @@ export default Vue.extend({
     addChild(ev: Event, node: TreeNode<string, TreeData>) {
       if (ev) ev.preventDefault();
 
-      const newChild = { id: String(this.id++), label: "", children: [] };
+      const newChild = { id: String(this.newID()), label: "", children: [] };
       if (!node.data.children) {
         node.data.children = [];
       }
@@ -131,7 +155,7 @@ export default Vue.extend({
       if (ev) ev.preventDefault();
 
       let siblings = node.parent?.data.children ?? this.elements_;
-      const newSibling = { id: String(this.id++), label: "", children: [] };
+      const newSibling = { id: String(this.newID()), label: "", children: [] };
 
       siblings.push(newSibling);
       this.toggleRename(newSibling);
@@ -170,9 +194,9 @@ export default Vue.extend({
     },
 
     /** Calls `fn` on each element in the tree */
-    treeForeach(tree: TreeData, fn: (t: TreeData) => void) {
+    treeForEach(tree: TreeData, fn: (t: TreeData) => void) {
       fn(tree);
-      tree.children?.forEach(child => this.treeForeach(child, fn));
+      tree.children?.forEach(child => this.treeForEach(child, fn));
     },
 
     /** Makes a new tree, filtering out the elements for which `fn` returns false and their children */
@@ -186,7 +210,7 @@ export default Vue.extend({
           ?.map(child => this.treeFilter(child, fn))
           .filter(child => child != null) as undefined | TreeData[]
       };
-      tree.children?.forEach(child => this.treeForeach(child, fn));
+      tree.children?.forEach(child => this.treeForEach(child, fn));
     }
   }
 });

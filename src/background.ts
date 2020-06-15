@@ -7,7 +7,7 @@ import {
     installVueDevtools,
 } from 'vue-cli-plugin-electron-builder/lib'
 
-declare var __static: string;
+declare const __static: string;
 
 installCallbacks(ipcMain)
 
@@ -25,11 +25,14 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { secure: tru
 function createWindow() {
     // Create the browser window.
     win = new BrowserWindow({
-        width: 800, height: 600, webPreferences: {
+        width: 800,
+        height: 600,
+        webPreferences: {
             // Use pluginOptions.nodeIntegration, leave this alone
             // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
             nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION as boolean | undefined,
-            preload: join(__static, 'preload.js')
+            preload: join(__static, 'preload.js'),
+            enableRemoteModule: true
         }
     })
 

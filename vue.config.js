@@ -1,12 +1,7 @@
 const webpack = require('webpack')
 
 module.exports = {
-  pluginOptions: {
-    electronBiulder: {
-      preload: 'src/preload.js',
-      nodeIntegration: true,
-    }
-  },
+  pluginOptions: {},
   configureWebpack: {
     devtool: 'source-map',
     plugins: [

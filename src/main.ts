@@ -6,7 +6,7 @@ import Element from "element-ui"
 import { connect, request, close } from './database/databaseRenderer'
 import { IpcRenderer } from 'electron';
 // `ipcRenderer` is added to the `window` object in preload.js
-export declare var ipcRenderer: IpcRenderer;
+export declare const ipcRenderer: IpcRenderer;
 
 
 Vue.config.productionTip = false

@@ -69,7 +69,8 @@ import {
   ColumnValue
 } from "@/database/databaseRenderer";
 import { IpcRenderer } from "electron";
-declare var ipcRenderer: IpcRenderer;
+// from preload.js
+declare const ipcRenderer: IpcRenderer;
 
 let fn = async () => {};
 
