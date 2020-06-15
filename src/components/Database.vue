@@ -32,13 +32,13 @@
       <template v-else>
         <el-form :model="credentials" label-position="right" label-width="110px">
           <el-form-item label="url :">
-            <el-input v-model="credentials.url" placeholder="url"></el-input>
+            <el-input v-model="credentials.url" placeholder="url" />
           </el-form-item>
           <el-form-item label="login :">
-            <el-input v-model="credentials.login" placeholder="login"></el-input>
+            <el-input v-model="credentials.login" placeholder="login" />
           </el-form-item>
           <el-form-item label="mot de passe :">
-            <el-input v-model="credentials.password" placeholder="mot de passe"></el-input>
+            <el-input v-model="credentials.password" show-password placeholder="mot de passe" />
           </el-form-item>
           <el-form-item>
             <el-button @click="connect" type="primary">Se connecter</el-button>
@@ -87,12 +87,12 @@ export default Vue.extend({
     tableData: [] as Record<string, string>[],
     resultRequest: "",
     credentials: {
-      url: "localhost",
-      login: "SA",
-      password: "P@55w0rd123"
+      url: "",
+      login: "",
+      password: ""
     },
     connected: false,
-    request: "select * from test"
+    request: ""
   }),
 
   methods: {
