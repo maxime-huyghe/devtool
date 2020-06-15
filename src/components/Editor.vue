@@ -1,9 +1,9 @@
 <template>
   <div class="parent">
-    <el-select placeholder="Langage" v-model="selectedLanguage">
+    <el-select v-model="selectedLanguage" filterable placeholder="Langage">
       <el-option
         v-for="lang in languages"
-        :key="lang.name"
+        :key="lang.display"
         :label="lang.display"
         :value="lang.name"
       />
@@ -15,6 +15,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Ace from "ace-builds";
+import { editorModes } from "./editorModes";
 require("ace-builds/webpack-resolver");
 
 const event = "change";
@@ -31,10 +32,7 @@ export default Vue.extend({
 
   data: () => {
     // List here: https://github.com/ajaxorg/ace/blob/master/lib/ace/ext/modelist.js#L53
-    const languages = [
-      { name: "sqlserver", display: "MS SQL" },
-      { name: "cs", display: "C#" }
-    ];
+    const languages = editorModes;
     return {
       editor: null as ReturnType<typeof Ace.edit> | null,
       languages,

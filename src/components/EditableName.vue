@@ -6,18 +6,16 @@
         <el-button v-else type="text" icon="el-icon-plus">nommer</el-button>
       </span>
 
-      <el-input-group>
-        <el-input
-          size="mini"
-          clearable
-          @change="editing = false"
-          @blur="editing = false"
-          @input="update"
-          :value="value"
-          ref="input"
-          placeholder="Entrez un nom"
-        />
-      </el-input-group>
+      <el-input
+        size="mini"
+        clearable
+        @change="editing = false"
+        @blur="editing = false"
+        @input="update"
+        :value="value"
+        ref="input"
+        placeholder="Entrez un nom"
+      />
     </el-popover>
   </span>
 </template>

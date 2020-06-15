@@ -218,7 +218,6 @@ export default Vue.extend({
       this.justCleaned = true;
       this.treeElements = hasKeys.tree;
       this.examples = hasKeys.examples;
-      console.log(this.treeElements);
     }
   },
 
