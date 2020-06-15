@@ -1,13 +1,15 @@
 <template>
-  <div class="parent">
-    <el-select v-model="selectedLanguage" filterable placeholder="Langage">
-      <el-option
-        v-for="lang in languages"
-        :key="lang.display"
-        :label="lang.display"
-        :value="lang.name"
-      />
-    </el-select>
+  <div id="parent">
+    <div id="settings">
+      <el-select v-model="selectedLanguage" filterable placeholder="Langage">
+        <el-option
+          v-for="lang in languages"
+          :key="lang.display"
+          :label="lang.display"
+          :value="lang.name"
+        />
+      </el-select>
+    </div>
     <div id="editor"></div>
   </div>
 </template>
@@ -98,14 +100,11 @@ export default Vue.extend({
 </script>
 
 <style scoped>
-.container {
-  height: 100vh;
-  overflow: auto;
-}
-
-.parent {
+#parent {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 #editor {

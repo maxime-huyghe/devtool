@@ -1,7 +1,7 @@
 <template>
-  <div id="app">
+  <div id="app" @mousemove="(ev) => onMouseMove(ev)" @mouseup="onMouseUp">
     <!-- Tree -->
-    <span class="col left">
+    <div class="col left" ref="left" :style="treeStyle">
       <el-form>
         <el-form-item>
           <!-- Broken for some reason -->
@@ -23,30 +23,38 @@
         :elements="treeElements"
         :onElementsChange="(newElts) => treeElements = newElts"
       />
-    </span>
+    </div>
+
+    <div class="resize-handle" @mousedown="(ev) => onMouseDown(ev, 'left')">
+      <div>
+        <i class="el-icon-caret-right" />
+        <br />
+        <i class="el-icon-caret-left" />
+      </div>
+    </div>
 
     <!-- Editor -->
-    <span class="col mid" :style="editorStyle">
+    <div class="col mid">
       <Editor
         v-if="currentExampleId != null"
         :editId="currentExampleId"
         v-model="examples"
         @selection="(select) => editorSelection = select"
       />
-    </span>
+    </div>
 
-    <!-- Expand database button -->
-    <el-button
-      @click="databaseExpanded = !databaseExpanded"
-      :icon="databaseExpanded ? 'el-icon-arrow-right' : 'el-icon-arrow-left'"
-      type="text"
-      id="expand"
-    ></el-button>
+    <div class="resize-handle" @mousedown="(ev) => onMouseDown(ev, 'right')">
+      <div>
+        <i class="el-icon-caret-right" />
+        <br />
+        <i class="el-icon-caret-left" />
+      </div>
+    </div>
 
     <!-- Database -->
-    <span class="col right" :style="databaseStyle">
+    <div class="col right" ref="right" :style="databaseStyle">
       <Database :selection="editorSelection" />
-    </span>
+    </div>
   </div>
 </template>
 
@@ -73,27 +81,34 @@ export default Vue.extend({
   },
 
   data: () => ({
-    // The id of the example currently open in the editor
+    // The id of the example currently open in the editor.
     currentExampleId: null as string | null,
-    // id -> example
+    // id -> example.
     examples: {} as Record<string, string>,
-    // The elements in the menu on the left
+    // The elements in the menu on the left.
     treeElements: [] as TreeData[],
 
-    // The currently opened file
+    // The currently opened file.
     fileName: "",
 
-    // Whether the data was modified since the file was last loaded or saved
+    // Whether the data was modified since the file was last loaded or saved.
     dirty: false,
     // If this is true, do not set dirty when the data is modified
     // because it means the modification comes from loading from disk.
     justCleaned: false,
 
-    // The text that's selected in the editor
+    // The text that's selected in the editor.
     editorSelection: "",
 
-    // Whether the database pane should be expanded
-    databaseExpanded: false
+    // Whether the database pane should be expanded.
+    databaseExpanded: false,
+
+    // Whether a column is being dragged, and which one. This is set in the onMouse(Down|Move|Up) handlers.
+    columnDragged: null as "left" | "right" | null,
+
+    // The left and right columns' width in px.
+    leftWidth: 450,
+    rightWidth: 600
   }),
 
   watch: {
@@ -218,41 +233,53 @@ export default Vue.extend({
       this.justCleaned = true;
       this.treeElements = hasKeys.tree;
       this.examples = hasKeys.examples;
+    },
+
+    // TODO: use direct DOM manipulation for column resizing ?
+
+    // Attached to the resize handles: if the drag starts on them, the user wants to resize.
+    onMouseDown(ev: MouseEvent, whichColumn: "right" | "left") {
+      this.columnDragged = whichColumn;
+    },
+
+    // Due to how Vue handles events asynchronously, the mouse can leave the element before it has
+    // reached the correct position and ruin our day. That's why this handler is attached to the
+    // root. Potentially terrible for performance.
+    onMouseMove(ev: MouseEvent) {
+      if (!this.columnDragged) return;
+
+      switch (this.columnDragged) {
+        case "right":
+          this.rightWidth -= ev.movementX;
+          break;
+        case "left":
+          this.leftWidth += ev.movementX;
+          break;
+      }
+    },
+
+    // See onMouseMove
+    onMouseUp() {
+      this.columnDragged = null;
     }
   },
 
   computed: {
-    editorStyle() {
-      let width = this.databaseExpanded ? "33vw" : "42vw";
-      return { width: width };
+    treeStyle: function() {
+      return { width: `${this.leftWidth}px` };
     },
     databaseStyle() {
-      let width = this.databaseExpanded ? "42vw" : "33vw";
-      return { width: width };
+      return { width: `${this.rightWidth}px` };
     }
   }
 });
 </script>
 
 <style>
-/* Width */
-.left {
-  width: 24vw;
+body {
+  margin: 0px;
 }
-#expand {
-  height: 100vh;
-  width: 1vw;
-}
-/* Height */
-#expand {
-  height: 100vh;
-}
-.left,
-.right {
-  height: 96vh;
-  margin: 2vh;
-}
-/* General */
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -262,7 +289,35 @@ export default Vue.extend({
   background: white;
   margin: 0px;
 }
-body {
+
+.col {
+  border-left: 1px solid;
+  border-right: 1px solid;
+}
+.mid {
+  flex: 1;
+}
+.left,
+.right {
+  height: 98vh;
+  padding-top: 1vh;
+  padding-bottom: 1vh;
+}
+.left {
+  padding-left: 1vw;
+}
+.right {
+  padding-right: 1vw;
+}
+
+.resize-handle {
   margin: 0px;
+  width: 1vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 100vh;
+  user-select: none;
+  cursor: col-resize;
 }
 </style>
