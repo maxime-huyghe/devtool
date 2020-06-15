@@ -1,19 +1,24 @@
 <template>
-  <span>
-    <el-button class="edit-btn" size="mini" type="text" icon="el-icon-edit" @click="toggleEditing" />
-    <el-input
-      v-if="editing"
-      size="mini"
-      clearable
-      @change="toggleEditing"
-      @blur="toggleEditing"
-      @input="update"
-      :value="value"
-      ref="input"
-      placeholder="Entrez un nom"
-    />
+  <span @click="startEditing">
+    <el-popover placement="top" trigger="manual" v-model="editing">
+      <span slot="reference">
+        <el-button v-if="value.length > 0" type="text" icon="el-icon-edit">{{value}}</el-button>
+        <el-button v-else type="text" icon="el-icon-plus">nommer</el-button>
+      </span>
 
-    <span v-else @click="toggleEditing">{{value}}</span>
+      <el-input-group>
+        <el-input
+          size="mini"
+          clearable
+          @change="editing = false"
+          @blur="editing = false"
+          @input="update"
+          :value="value"
+          ref="input"
+          placeholder="Entrez un nom"
+        />
+      </el-input-group>
+    </el-popover>
   </span>
 </template>
 
@@ -27,7 +32,7 @@ export default Vue.extend({
   },
 
   data: () => ({
-    editing: true
+    editing: false
   }),
 
   mounted() {
@@ -35,12 +40,11 @@ export default Vue.extend({
   },
 
   methods: {
-    async toggleEditing() {
-      this.editing = !this.editing;
-      if (this.editing) {
-        await Vue.nextTick();
-        (this.$refs.input as any)?.focus();
-      }
+    async startEditing(ev: Event) {
+      ev.preventDefault();
+      this.editing = true;
+      await Vue.nextTick();
+      (this.$refs.input as any)?.focus();
     },
     update(ev: string) {
       this.$emit("input", ev);

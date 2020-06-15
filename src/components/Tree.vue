@@ -11,52 +11,58 @@
     <el-tree
       v-else
       :data="elements"
-      @node-click="onNodeClick"
       node-key="id"
+      @node-click="onNodeClick"
+      draggable
       :expand-on-click-node="false"
-      :default-expand-all="true"
+      default-expand-all
     >
       <!-- Tree node content -->
-      <div
-        class="tree-node"
-        slot-scope="{ node, data }"
-        :class="{ selected: data.id === lastSelected }"
-      >
+      <span class="tree-node" slot-scope="{ node, data }">
         <!-- Name -->
-        <EditableName v-model.trim="data.label" />
+        <EditableName v-model="data.label" />
 
         <!-- Buttons -->
         <span>
-          <!-- On click -->
+          <!-- Open -->
           <el-button
-            size="mini"
             type="text"
-            icon="el-icon-document"
+            icon="el-icon-edit-outline"
             @click="onNodeClick(data, node, undefined)"
-          >Ouvrir</el-button>
-          <!-- New -->
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-plus"
-            @click="(ev) => addChild(ev, node)"
-          >Enfant</el-button>
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-plus"
-            @click="(ev) => addSibling(ev, node)"
-          >Frère</el-button>
+          />
 
           <!-- Remove -->
           <el-button
-            size="mini"
+            class="mr"
             type="text"
             icon="el-icon-delete"
             @click="(ev) => removeNode(ev, node)"
-          >Supprimer</el-button>
+          />
+
+          <!-- New -->
+          <el-popover placement="right" trigger="hover">
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-plus"
+              @click="(ev) => addChild(ev, node)"
+            >Enfant</el-button>
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-plus"
+              @click="(ev) => addSibling(ev, node)"
+            >Frère</el-button>
+
+            <el-button
+              slot="reference"
+              type="text"
+              icon="el-icon-plus"
+              @click="(ev) => addChild(ev, node)"
+            />
+          </el-popover>
         </span>
-      </div>
+      </span>
     </el-tree>
   </div>
 </template>
@@ -84,8 +90,7 @@ export default Vue.extend({
     return {
       /** IDs (in TreeData objects) should be written as numbers but read as strings */
       elements_: this.elements as TreeData[],
-      renameId: null as string | null,
-      lastSelected: null
+      renameId: null as string | null
     };
   },
 
@@ -182,7 +187,6 @@ export default Vue.extend({
       node: TreeNode<string, TreeData>,
       component: any
     ) {
-      this.lastSelected = nodeData.id;
       this.onElementClicked(nodeData.id);
     },
 
@@ -226,12 +230,15 @@ export default Vue.extend({
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 10px;
 }
 .edit-btn {
   margin-right: 10px;
 }
-.selected {
-  background-color: #f0f0f0;
+.mr {
+  margin-right: 8px;
+}
+.small {
+  height: 14px;
+  padding: 0px;
 }
 </style>
