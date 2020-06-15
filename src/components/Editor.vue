@@ -1,22 +1,26 @@
 <template>
   <div class="parent">
+    <el-select placeholder="Langage" v-model="selectedLanguage">
+      <el-option
+        v-for="lang in languages"
+        :key="lang.name"
+        :label="lang.display"
+        :value="lang.name"
+      />
+    </el-select>
     <div id="editor"></div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-import Ace, { edit } from "ace-builds";
+import Ace from "ace-builds";
 require("ace-builds/webpack-resolver");
 
 const event = "change";
 
 export default Vue.extend({
   name: "Editor",
-
-  data: () => ({
-    editor: null as ReturnType<typeof edit> | null
-  }),
 
   props: {
     // Session->text mapping.
@@ -25,14 +29,39 @@ export default Vue.extend({
     editId: String
   },
 
+  data: () => {
+    // List here: https://github.com/ajaxorg/ace/blob/master/lib/ace/ext/modelist.js#L53
+    const languages = [
+      { name: "sqlserver", display: "MS SQL" },
+      { name: "cs", display: "C#" }
+    ];
+    return {
+      editor: null as ReturnType<typeof Ace.edit> | null,
+      languages,
+      selectedLanguage: languages[0].name
+    };
+  },
+
+  computed: {
+    // The text currently being edited
+    edited: {
+      get() {
+        return this.contents[this.editId];
+      },
+      set(newValue: string) {
+        this.contents[this.editId] = newValue;
+      }
+    }
+  },
+
   model: {
     prop: "contents",
     event: event
   },
 
   mounted() {
-    this.editor = Ace.edit("editor");
-    this.editor.session.setMode("ace/mode/javascript");
+    this.editor = Ace.edit("editor"); // HTML element with id `editor`
+    this.editor.session.setMode(`ace/mode/${this.selectedLanguage}`);
     this.editor.setValue(this.edited);
 
     this.editor.on("change", () => {
@@ -61,17 +90,10 @@ export default Vue.extend({
       this.editor.setValue(this.edited);
       this.editor.gotoLine(0, 0, false);
       this.editor.focus();
-    }
-  },
+    },
 
-  computed: {
-    edited: {
-      get() {
-        return this.contents[this.editId];
-      },
-      set(newValue: string) {
-        this.contents[this.editId] = newValue;
-      }
+    selectedLanguage(newLang) {
+      this.editor?.session.setMode(`ace/mode/${newLang}`);
     }
   }
 });
