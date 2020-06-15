@@ -22,8 +22,6 @@
         :onElementClicked="onTreeElementClicked"
         :elements="treeElements"
         :onElementsChange="(newElts) => treeElements = newElts"
-        :onSave="save"
-        :onLoad="load"
       />
     </span>
 
@@ -128,17 +126,20 @@ export default Vue.extend({
       }
     },
 
-    save(fileName: string) {
-      const file = fs.createWriteStream(fileName);
-      file.write(
-        JSON.stringify({
-          tree: this.treeElements,
-          examples: this.examples
-        })
-      );
-      file.close();
+    async save(fileName: string) {
+      return await new Promise(resolve => {
+        const file = fs.createWriteStream(fileName);
+        file.write(
+          JSON.stringify({
+            tree: this.treeElements,
+            examples: this.examples
+          })
+        );
+        file.close();
 
-      this.dirty = false;
+        this.dirty = false;
+        resolve();
+      });
     },
 
     async saveAs() {
@@ -151,7 +152,7 @@ export default Vue.extend({
       if (!res.filePath) return;
 
       this.fileName = res.filePath;
-      this.save(res.filePath);
+      await this.save(res.filePath);
     },
 
     async load() {
@@ -162,23 +163,35 @@ export default Vue.extend({
       if (res.canceled) return;
       if (!res.filePaths[0]) return;
 
-      const file = fs.createReadStream(res.filePaths[0]);
-      let content = file.read();
-      if (!content) {
-        console.log("Retrying file read...");
-        // This often fails the first time
-        content = file.read();
+      // The file reading code is wrapped in a promise to avoid blocking, as Vue seems to dislike
+      // slow click handlers.
+      const loadFile: Promise<string> = new Promise((resolve, reject) => {
+        const file = fs.createReadStream(res.filePaths[0]);
+        let content = file.read();
         if (!content) {
-          const error = `couldn't read file ${res.filePaths[0]}`;
-          this.showError(error);
-          throw error;
+          console.log("Retrying file read...");
+          // This often fails the first time
+          content = file.read();
+          if (!content) {
+            const error = `couldn't read file ${res.filePaths[0]}`;
+            reject(error);
+          }
         }
+        resolve(content);
+      });
+
+      let fileContent: string;
+      try {
+        fileContent = await loadFile;
+      } catch (error) {
+        this.showError(error);
+        throw error;
       }
 
       let parsed: any;
       let properties: string[];
       try {
-        parsed = JSON.parse(content.toString());
+        parsed = JSON.parse(fileContent.toString());
         properties = Object.getOwnPropertyNames(parsed);
       } catch (error) {
         const err = `not valid json: ${error.toString()}`;
