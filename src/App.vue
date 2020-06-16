@@ -1,60 +1,44 @@
 <template>
-  <div id="app" @mousemove="(ev) => onMouseMove(ev)" @mouseup="onMouseUp">
-    <!-- Tree -->
-    <div class="col left" ref="left" :style="treeStyle">
-      <el-form>
-        <el-form-item>
-          <!-- Broken for some reason -->
-          <el-button
-            @click="save(fileName)"
-            :disabled="!dirty || fileName == null"
-            icon="el-icon-download"
-            type="primary"
-          >Sauvegarder {{ fileName ? fileName.split('/').pop() : '' }}</el-button>
-          <el-button @click="saveAs" icon="el-icon-download" type="primary">Sauvegarder sous</el-button>
-        </el-form-item>
-        <el-form-item>
-          <el-button @click="load" icon="el-icon-upload2" type="primary">Charger</el-button>
-        </el-form-item>
-      </el-form>
+  <div id="app">
+    <columns id="columns" :leftWidth="450" :rightWidth="600">
+      <!-- Tree -->
+      <div slot="left" class="col left" ref="left">
+        <el-form>
+          <el-form-item>
+            <!-- Broken for some reason -->
+            <el-button
+              @click="save(fileName)"
+              :disabled="!dirty || fileName == null"
+              icon="el-icon-download"
+              type="primary"
+            >Sauvegarder {{ fileName ? fileName.split('/').pop() : '' }}</el-button>
+            <el-button @click="saveAs" icon="el-icon-download" type="primary">Sauvegarder sous</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="load" icon="el-icon-upload2" type="primary">Charger</el-button>
+          </el-form-item>
+        </el-form>
 
-      <Tree
-        :onElementClicked="onTreeElementClicked"
-        :elements="treeElements"
-        :onElementsChange="(newElts) => treeElements = newElts"
-      />
-    </div>
-
-    <div class="resize-handle" @mousedown="(ev) => onMouseDown(ev, 'left')">
-      <div>
-        <i class="el-icon-caret-right" />
-        <br />
-        <i class="el-icon-caret-left" />
+        <Tree
+          :onElementClicked="onTreeElementClicked"
+          :elements="treeElements"
+          :onElementsChange="(newElts) => treeElements = newElts"
+        />
       </div>
-    </div>
 
-    <!-- Editor -->
-    <div class="col mid">
+      <!-- Editor -->
       <Editor
         v-if="currentExampleId != null"
         :editId="currentExampleId"
         v-model="examples"
         @selection="(select) => editorSelection = select"
       />
-    </div>
 
-    <div class="resize-handle" @mousedown="(ev) => onMouseDown(ev, 'right')">
-      <div>
-        <i class="el-icon-caret-right" />
-        <br />
-        <i class="el-icon-caret-left" />
+      <!-- Database -->
+      <div slot="right" class="col right" ref="right">
+        <Database :selection="editorSelection" />
       </div>
-    </div>
-
-    <!-- Database -->
-    <div class="col right" ref="right" :style="databaseStyle">
-      <Database :selection="editorSelection" />
-    </div>
+    </columns>
   </div>
 </template>
 
@@ -63,6 +47,7 @@ import Vue from "vue";
 import Tree from "./components/Tree.vue";
 import Editor from "./components/Editor.vue";
 import Database from "./components/Database.vue";
+import Columns from "./components/Columns.vue";
 import { TreeData } from "element-ui/types/tree";
 import { Dialog } from "electron";
 // from preload.js
@@ -77,7 +62,8 @@ export default Vue.extend({
   components: {
     Tree,
     Editor,
-    Database
+    Database,
+    Columns
   },
 
   data: () => ({
@@ -98,17 +84,7 @@ export default Vue.extend({
     justCleaned: false,
 
     // The text that's selected in the editor.
-    editorSelection: "",
-
-    // Whether the database pane should be expanded.
-    databaseExpanded: false,
-
-    // Whether a column is being dragged, and which one. This is set in the onMouse(Down|Move|Up) handlers.
-    columnDragged: null as "left" | "right" | null,
-
-    // The left and right columns' width in px.
-    leftWidth: 450,
-    rightWidth: 600
+    editorSelection: ""
   }),
 
   watch: {
@@ -233,43 +209,6 @@ export default Vue.extend({
       this.justCleaned = true;
       this.treeElements = hasKeys.tree;
       this.examples = hasKeys.examples;
-    },
-
-    // TODO: use direct DOM manipulation for column resizing ?
-
-    // Attached to the resize handles: if the drag starts on them, the user wants to resize.
-    onMouseDown(ev: MouseEvent, whichColumn: "right" | "left") {
-      this.columnDragged = whichColumn;
-    },
-
-    // Due to how Vue handles events asynchronously, the mouse can leave the element before it has
-    // reached the correct position and ruin our day. That's why this handler is attached to the
-    // root. Potentially terrible for performance.
-    onMouseMove(ev: MouseEvent) {
-      if (!this.columnDragged) return;
-
-      switch (this.columnDragged) {
-        case "right":
-          this.rightWidth -= ev.movementX;
-          break;
-        case "left":
-          this.leftWidth += ev.movementX;
-          break;
-      }
-    },
-
-    // See onMouseMove
-    onMouseUp() {
-      this.columnDragged = null;
-    }
-  },
-
-  computed: {
-    treeStyle: function() {
-      return { width: `${this.leftWidth}px` };
-    },
-    databaseStyle() {
-      return { width: `${this.rightWidth}px` };
     }
   }
 });
@@ -284,40 +223,11 @@ body {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  display: flex;
-  flex-direction: row;
   background: white;
   margin: 0px;
 }
 
-.col {
-  border-left: 1px solid;
-  border-right: 1px solid;
-}
-.mid {
-  flex: 1;
-}
-.left,
-.right {
-  height: 98vh;
-  padding-top: 1vh;
-  padding-bottom: 1vh;
-}
-.left {
-  padding-left: 1vw;
-}
-.right {
-  padding-right: 1vw;
-}
-
-.resize-handle {
-  margin: 0px;
-  width: 1vw;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
+#columns {
   height: 100vh;
-  user-select: none;
-  cursor: col-resize;
 }
 </style>
