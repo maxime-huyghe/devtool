@@ -1,16 +1,12 @@
 <template>
   <div>
-    <div
-      @mousemove="onMouseMove"
-      @mouseup="onMouseUp"
-      style="display: flex; flex-direction: row; height: 98%;"
-    >
+    <div style="display: flex; flex-direction: row; height: 98%;">
       <!-- Left column -->
       <div id="left" ref="left">
         <slot name="left" />
       </div>
 
-      <div class="resize-handle" @mousedown="(ev) => onMouseDown(ev, 'left')">
+      <div ref="handleLeft" class="resize-handle">
         <div>
           <i class="el-icon-caret-right" />
           <br />
@@ -23,7 +19,7 @@
         <slot />
       </div>
 
-      <div class="resize-handle" @mousedown="(ev) => onMouseDown(ev, 'right')">
+      <div ref="handleRight" class="resize-handle">
         <div>
           <i class="el-icon-caret-right" />
           <br />
@@ -41,6 +37,9 @@
 
 <script lang="ts">
 import Vue from "vue";
+
+const onMouseDown = (column: "left" | "right") => {};
+
 export default Vue.extend({
   name: "Columns",
 
@@ -51,7 +50,7 @@ export default Vue.extend({
 
   data() {
     return {
-      // Whether a column is being dragged, and which one. This is set in the onMouse(Down|Move|Up) handlers.
+      // Left/right handle is being dragged.
       lDragged: false,
       rDragged: false,
 
@@ -61,45 +60,56 @@ export default Vue.extend({
     };
   },
 
-  mounted() {
-    (this.$refs.right as HTMLElement).style.width = this.rw + "px";
-    (this.$refs.left as HTMLElement).style.width = this.lw + "px";
-  },
+  async mounted() {
+    await this.$nextTick;
 
-  methods: {
-    // Attached to the resize handles: if the drag starts on them, the user wants to resize.
-    onMouseDown(ev: MouseEvent, whichColumn: "right" | "left") {
-      switch (whichColumn) {
-        case "right":
-          this.rDragged = true;
-          break;
-        case "left":
-          this.lDragged = true;
-          break;
-      }
-    },
+    const right = this.$refs.right as HTMLElement;
+    const left = this.$refs.left as HTMLElement;
+    const handleRight = this.$refs.handleRight as HTMLElement;
+    const handleLeft = this.$refs.handleLeft as HTMLElement;
 
-    // Due to how Vue handles events asynchronously, the mouse can leave the element before it has
-    // reached the correct position and ruin our day. That's why this handler is attached to the
-    // root. Potentially terrible for performance.
-    onMouseMove(ev: MouseEvent) {
-      if (this.rDragged) {
-        this.rw -= ev.movementX;
-        (this.$refs.right as HTMLElement).style.width =
-          Math.max(this.rw, 300) + "px";
-      }
-      if (this.lDragged) {
-        this.lw += ev.movementX;
-        (this.$refs.left as HTMLElement).style.width =
-          Math.max(this.lw, 300) + "px";
-      }
-    },
+    right.style.width = this.rw + "px";
+    left.style.width = this.lw + "px";
 
-    // See onMouseMove
-    onMouseUp() {
+    // Using native html handlers instead of Vue v-on directives for performance reasons.
+
+    // Start of the drag motion.
+    handleRight.onmousedown = () => (this.rDragged = true);
+    handleLeft.onmousedown = () => (this.lDragged = true);
+
+    // Handles the drag motion.
+    handleRight.onmousemove = ev => {
+      if (!this.rDragged) return;
+      this.rw -= ev.movementX;
+      right.style.width = Math.max(this.rw, 300) + "px";
+    };
+    handleLeft.onmousemove = ev => {
+      if (!this.lDragged) return;
+      this.lw += ev.movementX;
+      left.style.width = Math.max(this.lw, 300) + "px";
+    };
+
+    // End of the drag motion.
+    const mouseUp = () => {
       this.rDragged = false;
       this.lDragged = false;
-    }
+    };
+    handleRight.onmouseup = mouseUp;
+    handleRight.onmouseleave = mouseUp;
+    handleLeft.onmouseup = mouseUp;
+    handleLeft.onmouseleave = mouseUp;
+  },
+
+  beforeDestroy() {
+    const handleRight = this.$refs.handleRight as HTMLElement;
+    const handleLeft = this.$refs.handleLeft as HTMLElement;
+
+    [handleLeft, handleRight].forEach(col => {
+      col.onmousedown = null;
+      col.onmousemove = null;
+      col.onmouseup = null;
+      col.onmouseleave = null;
+    });
   }
 });
 </script>
