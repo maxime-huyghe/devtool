@@ -14,7 +14,7 @@ export function installCallbacks(ipcMain: IpcMain) {
     ipcMain.handle(IpcMessages.close, closeHandler)
 }
 
-const connectionHandler = async (event: IpcMainInvokeEvent, server: string, userName: string, password: string, database: string): Promise<void> => {
+const connectionHandler = async (event: IpcMainInvokeEvent, server: string, port: number, userName: string, password: string, database: string): Promise<void> => {
     console.log('connect')
     let config: ConnectionConfig = {
         server,
@@ -27,6 +27,7 @@ const connectionHandler = async (event: IpcMainInvokeEvent, server: string, user
         },
         options: {
             database,
+            port,
             trustServerCertificate: true,
             rowCollectionOnRequestCompletion: true,
             encrypt: true,

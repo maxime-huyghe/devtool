@@ -5,8 +5,10 @@
       Loading
       <i class="el-icon-loading" />
     </template>
+
     <!-- Not loading -->
     <template v-else>
+      <!-- Query -->
       <template v-if="connected">
         <el-form label-position="right" label-width="110px">
           <el-form-item>
@@ -29,10 +31,15 @@
           </el-form-item>
         </el-form>
       </template>
+
+      <!-- Login -->
       <template v-else>
         <el-form :model="credentials" label-position="right" label-width="110px">
           <el-form-item label="url :">
             <el-input v-model="credentials.url" placeholder="url" />
+          </el-form-item>
+          <el-form-item label="port :">
+            <el-input type="number" v-model="credentials.port" placeholder="port" />
           </el-form-item>
           <el-form-item label="login :">
             <el-input v-model="credentials.login" placeholder="login" />
@@ -48,6 +55,8 @@
           </el-form-item>
         </el-form>
       </template>
+
+      <!-- Results -->
       <template v-if="tableData.length > 0">
         <el-alert :title="this.resultRequest" type="info" :closable="false"></el-alert>
         <el-table :data="tableData">
@@ -91,6 +100,7 @@ export default Vue.extend({
     resultRequest: "",
     credentials: {
       url: "",
+      port: 1433,
       login: "",
       password: "",
       database: ""
@@ -115,6 +125,7 @@ export default Vue.extend({
         await connect(
           ipcRenderer,
           this.credentials.url,
+          this.credentials.port,
           this.credentials.login,
           this.credentials.password,
           this.credentials.database

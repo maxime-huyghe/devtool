@@ -25,9 +25,9 @@ export enum IpcMessages {
 
 /** Functions implemented in databaseBackground.ts */
 export async function connect(
-    ipc: IpcRenderer, url: string, username: string, password: string, database: string
+    ipc: IpcRenderer, url: string, port: number, username: string, password: string, database: string
 ): Promise<void> {
-    return ipc.invoke(IpcMessages.connect, url, username, password, database)
+    return ipc.invoke(IpcMessages.connect, url, port, username, password, database)
 }
 
 export async function close(ipc: IpcRenderer): Promise<void> {
