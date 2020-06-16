@@ -100,7 +100,7 @@ export default Vue.extend({
     resultRequest: "",
     credentials: {
       url: "",
-      port: 1433,
+      port: "1433",
       login: "",
       password: "",
       database: ""
@@ -125,7 +125,7 @@ export default Vue.extend({
         await connect(
           ipcRenderer,
           this.credentials.url,
-          this.credentials.port,
+          Number(this.credentials.port),
           this.credentials.login,
           this.credentials.password,
           this.credentials.database
