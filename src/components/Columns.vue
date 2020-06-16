@@ -1,18 +1,16 @@
 <template>
   <div>
-    <div style="display: flex; flex-direction: row; height: 98%;">
+    <div
+      @mousemove="onMouseMove"
+      @mouseup="onMouseUp"
+      style="display: flex; flex-direction: row; height: 98%;"
+    >
       <!-- Left column -->
       <div id="left" ref="left">
         <slot name="left" />
       </div>
 
-      <div
-        class="resize-handle"
-        @mousedown="(ev) => onMouseDown(ev, 'left')"
-        @mousemove="(ev) => onMouseMove(ev, 'left')"
-        @mouseup="(ev) => onMouseUp(ev, 'left')"
-        @mouseleave="(ev) => onMouseUp(ev, 'left')"
-      >
+      <div class="resize-handle" @mousedown="(ev) => onMouseDown(ev, 'left')">
         <div>
           <i class="el-icon-caret-right" />
           <br />
@@ -25,13 +23,7 @@
         <slot />
       </div>
 
-      <div
-        class="resize-handle"
-        @mousedown="(ev) => onMouseDown(ev, 'right')"
-        @mousemove="(ev) => onMouseMove(ev, 'right')"
-        @mouseup="(ev) => onMouseUp(ev, 'right')"
-        @mouseleave="(ev) => onMouseUp(ev, 'right')"
-      >
+      <div class="resize-handle" @mousedown="(ev) => onMouseDown(ev, 'right')">
         <div>
           <i class="el-icon-caret-right" />
           <br />
@@ -90,44 +82,29 @@ export default Vue.extend({
     // Due to how Vue handles events asynchronously, the mouse can leave the element before it has
     // reached the correct position and ruin our day. That's why this handler is attached to the
     // root. Potentially terrible for performance.
-    onMouseMove(ev: MouseEvent, whichColumn: "right" | "left") {
-      switch (whichColumn) {
-        case "right":
-          if (!this.rDragged) return;
-          this.rw -= ev.movementX;
-          (this.$refs.right as HTMLElement).style.width =
-            Math.max(this.rw, 300) + "px";
-          break;
-        case "left":
-          if (!this.lDragged) return;
-          this.lw += ev.movementX;
-          (this.$refs.left as HTMLElement).style.width =
-            Math.max(this.lw, 300) + "px";
-          break;
+    onMouseMove(ev: MouseEvent) {
+      if (this.rDragged) {
+        this.rw -= ev.movementX;
+        (this.$refs.right as HTMLElement).style.width =
+          Math.max(this.rw, 300) + "px";
+      }
+      if (this.lDragged) {
+        this.lw += ev.movementX;
+        (this.$refs.left as HTMLElement).style.width =
+          Math.max(this.lw, 300) + "px";
       }
     },
 
     // See onMouseMove
-    onMouseUp(ev: MouseEvent, whichColumn: "right" | "left") {
-      switch (whichColumn) {
-        case "right":
-          this.rDragged = false;
-          break;
-        case "left":
-          this.lDragged = false;
-          break;
-      }
+    onMouseUp() {
+      this.rDragged = false;
+      this.lDragged = false;
     }
   }
 });
 </script>
 
 <style scoped>
-.col {
-  border-left: 1px solid;
-  border-right: 1px solid;
-}
-
 #mid {
   flex: 1;
 }
