@@ -35,8 +35,8 @@
       <!-- Login -->
       <template v-else>
         <el-form :model="credentials" label-position="right" label-width="110px">
-          <el-form-item label="url :">
-            <el-input v-model="credentials.url" placeholder="url" />
+          <el-form-item label="url du serveur :">
+            <el-input v-model="credentials.server" placeholder="url" />
           </el-form-item>
           <el-form-item>
             <el-switch
@@ -51,7 +51,7 @@
             <el-input v-else v-model="credentials.port" placeholder="port" />
           </el-form-item>
           <el-form-item label="login :">
-            <el-input v-model="credentials.login" placeholder="login" />
+            <el-input v-model="credentials.userName" placeholder="login" />
           </el-form-item>
           <el-form-item label="mot de passe :">
             <el-input v-model="credentials.password" show-password placeholder="mot de passe" />
@@ -110,10 +110,10 @@ export default Vue.extend({
     resultRequest: "",
     useInstanceName: false,
     credentials: {
-      url: "",
-      port: "",
+      server: "",
+      port: "1433",
       instance: "",
-      login: "",
+      userName: "",
       password: "",
       database: ""
     },
@@ -139,19 +139,17 @@ export default Vue.extend({
           ? { kind: "instance", instanceName: this.credentials.instance }
           : { kind: "port", port: Number(this.credentials.port) };
 
-        await connect(
-          ipcRenderer,
-          this.credentials.url,
-          instanceOrPort,
-          this.credentials.login,
-          this.credentials.password,
-          this.credentials.database
-        );
+        await connect(ipcRenderer, {
+          ...this.credentials,
+          instanceOrPort
+        });
+
         this.connected = true;
       } catch (err) {
         this.connected = false;
         this.showError(err);
       }
+
       this.loading = false;
     },
 

@@ -1,6 +1,11 @@
 import { IpcRenderer } from 'electron'
 
-/** Redefinition of tedious' ColumValue because it cannot be imported in the renderer process */
+/**
+ * A lot of types are defined here because we can import renderer modules from the
+ *  background process but not the oposite.
+ */
+
+/** Redefinition of tedious' ColumValue */
 export type ColumnValue = {
     metadata: {
         colName: string;
@@ -35,10 +40,11 @@ type Port = {
 }
 
 /** Functions implemented in databaseBackground.ts */
-export async function connect(
-    ipc: IpcRenderer, url: string, instanceOrPort: InstanceOrPort, username: string, password: string, database: string
-): Promise<void> {
-    return ipc.invoke(IpcMessages.connect, url, instanceOrPort, username, password, database)
+
+/** To keep the arguments in sync between the different parts of the app */
+export type ConnectArgs = { server: string, instanceOrPort: InstanceOrPort, userName: string, password: string, database: string }
+export async function connect(ipc: IpcRenderer, args: ConnectArgs): Promise<void> {
+    return ipc.invoke(IpcMessages.connect, args)
 }
 
 export async function close(ipc: IpcRenderer): Promise<void> {
