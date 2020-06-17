@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div style="display: flex; flex-direction: row; height: 98%;">
+    <div ref="parent" style="display: flex; flex-direction: row; height: 98%;">
       <!-- Left column -->
       <div id="left" ref="left">
         <slot name="left" />
@@ -38,7 +38,7 @@
 <script lang="ts">
 import Vue from "vue";
 
-const onMouseDown = (column: "left" | "right") => {};
+const minWidth = 150;
 
 export default Vue.extend({
   name: "Columns",
@@ -55,14 +55,15 @@ export default Vue.extend({
       rDragged: false,
 
       // The left and right columns' width in px.
-      lw: this.leftWidth ?? 300,
-      rw: this.rightWidth ?? 300
+      lw: this.leftWidth ?? minWidth,
+      rw: this.rightWidth ?? minWidth
     };
   },
 
   async mounted() {
     await this.$nextTick;
 
+    const parent = this.$refs.parent as HTMLElement;
     const right = this.$refs.right as HTMLElement;
     const left = this.$refs.left as HTMLElement;
     const handleRight = this.$refs.handleRight as HTMLElement;
@@ -73,31 +74,35 @@ export default Vue.extend({
 
     // Using native html handlers instead of Vue v-on directives for performance reasons.
 
-    // Start of the drag motion.
-    handleRight.onmousedown = () => (this.rDragged = true);
-    handleLeft.onmousedown = () => (this.lDragged = true);
-
     // Handles the drag motion.
-    handleRight.onmousemove = ev => {
-      if (!this.rDragged) return;
-      this.rw -= ev.movementX;
-      right.style.width = Math.max(this.rw, 300) + "px";
+    const mouseMove = (ev: MouseEvent) => {
+      ev.preventDefault();
+      if (this.rDragged) {
+        this.rw -= ev.movementX;
+        right.style.width = Math.max(this.rw, minWidth) + "px";
+      }
+      if (this.lDragged) {
+        this.lw += ev.movementX;
+        left.style.width = Math.max(this.lw, minWidth) + "px";
+      }
     };
-    handleLeft.onmousemove = ev => {
-      if (!this.lDragged) return;
-      this.lw += ev.movementX;
-      left.style.width = Math.max(this.lw, 300) + "px";
+
+    // Start of the drag motion.
+    handleRight.onmousedown = () => {
+      this.rDragged = true;
+      parent.onmousemove = mouseMove;
+    };
+    handleLeft.onmousedown = () => {
+      this.lDragged = true;
+      parent.onmousemove = mouseMove;
     };
 
     // End of the drag motion.
-    const mouseUp = () => {
+    parent.onmouseup = () => {
       this.rDragged = false;
       this.lDragged = false;
+      parent.onmousemove = null;
     };
-    handleRight.onmouseup = mouseUp;
-    handleRight.onmouseleave = mouseUp;
-    handleLeft.onmouseup = mouseUp;
-    handleLeft.onmouseleave = mouseUp;
   },
 
   beforeDestroy() {
