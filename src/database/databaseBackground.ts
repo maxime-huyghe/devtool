@@ -1,6 +1,6 @@
 import { Connection, Request, ConnectionConfig, ColumnValue } from "tedious";
 import { IpcMain, IpcMainInvokeEvent } from 'electron';
-import { IpcMessages } from './databaseRenderer';
+import { IpcMessages, InstanceOrPort } from './databaseRenderer';
 
 /** Global connection object */
 let connection: Connection | null
@@ -14,8 +14,12 @@ export function installCallbacks(ipcMain: IpcMain) {
     ipcMain.handle(IpcMessages.close, closeHandler)
 }
 
-const connectionHandler = async (event: IpcMainInvokeEvent, server: string, port: number, userName: string, password: string, database: string): Promise<void> => {
+const connectionHandler = async (event: IpcMainInvokeEvent, server: string, instanceOrPort: InstanceOrPort, userName: string, password: string, database: string): Promise<void> => {
     console.log('connect')
+    const iop = instanceOrPort.kind == 'instance'
+        ? { instanceName: instanceOrPort.instanceName }
+        : { port: instanceOrPort.port }
+
     let config: ConnectionConfig = {
         server,
         authentication: {
@@ -27,11 +31,11 @@ const connectionHandler = async (event: IpcMainInvokeEvent, server: string, port
         },
         options: {
             database,
-            port,
             trustServerCertificate: true,
             rowCollectionOnRequestCompletion: true,
             encrypt: true,
-            appName: 'devtool'
+            appName: 'devtool',
+            ...iop
         },
     }
 

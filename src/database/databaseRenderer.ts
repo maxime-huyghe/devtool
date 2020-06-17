@@ -23,11 +23,22 @@ export enum IpcMessages {
     request = 'request'
 }
 
+// see: https://www.typescriptlang.org/docs/handbook/advanced-types.html#discriminated-unions
+export type InstanceOrPort = Instance | Port
+type Instance = {
+    kind: 'instance',
+    instanceName: string
+}
+type Port = {
+    kind: 'port',
+    port: number
+}
+
 /** Functions implemented in databaseBackground.ts */
 export async function connect(
-    ipc: IpcRenderer, url: string, port: number, username: string, password: string, database: string
+    ipc: IpcRenderer, url: string, instanceOrPort: InstanceOrPort, username: string, password: string, database: string
 ): Promise<void> {
-    return ipc.invoke(IpcMessages.connect, url, port, username, password, database)
+    return ipc.invoke(IpcMessages.connect, url, instanceOrPort, username, password, database)
 }
 
 export async function close(ipc: IpcRenderer): Promise<void> {

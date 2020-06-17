@@ -38,8 +38,17 @@
           <el-form-item label="url :">
             <el-input v-model="credentials.url" placeholder="url" />
           </el-form-item>
-          <el-form-item label="port :">
-            <el-input type="number" v-model="credentials.port" placeholder="port" />
+          <el-form-item>
+            <el-switch
+              v-model="useInstanceName"
+              border
+              active-text="Nom d'instance"
+              inactive-text="Port"
+            />
+          </el-form-item>
+          <el-form-item :label="useInstanceName ? 'instance :' : 'port :'">
+            <el-input v-if="useInstanceName" v-model="credentials.instance" placeholder="instance" />
+            <el-input v-else v-model="credentials.port" placeholder="port" />
           </el-form-item>
           <el-form-item label="login :">
             <el-input v-model="credentials.login" placeholder="login" />
@@ -81,6 +90,7 @@ import {
   ColumnValue
 } from "@/database/databaseRenderer";
 import { IpcRenderer } from "electron";
+import { InstanceOrPort } from "../database/databaseRenderer";
 // from preload.js
 declare const ipcRenderer: IpcRenderer;
 
@@ -98,9 +108,11 @@ export default Vue.extend({
     columnNames: [] as string[],
     tableData: [] as Record<string, string>[],
     resultRequest: "",
+    useInstanceName: false,
     credentials: {
       url: "",
-      port: "1433",
+      port: "",
+      instance: "",
       login: "",
       password: "",
       database: ""
@@ -122,10 +134,15 @@ export default Vue.extend({
     async connect() {
       try {
         this.loading = true;
+
+        const instanceOrPort: InstanceOrPort = this.useInstanceName
+          ? { kind: "instance", instanceName: this.credentials.instance }
+          : { kind: "port", port: Number(this.credentials.port) };
+
         await connect(
           ipcRenderer,
           this.credentials.url,
-          Number(this.credentials.port),
+          instanceOrPort,
           this.credentials.login,
           this.credentials.password,
           this.credentials.database
