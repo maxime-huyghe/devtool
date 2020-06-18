@@ -39,14 +39,20 @@ type Port = {
     port: number
 }
 
-// https://stackoverflow.com/questions/44480644/typescript-string-union-to-string-array
-export const AUTH_TYPES = [
+export const AUTH_TYPES: AuthType['kind'][] = [
     'default', 'ntlm'
-    , 'azure-active-directory-password', 'azure-active-directory-access-token'
-    , 'azure-active-directory-msi-vm', 'azure-active-directory-msi-app-service'
-] as const
-type AuthTypeTuple = typeof AUTH_TYPES
-export type AuthType = AuthTypeTuple[number]
+    // , 'azure-active-directory-password', 'azure-active-directory-access-token'
+    // , 'azure-active-directory-msi-vm', 'azure-active-directory-msi-app-service'
+]
+
+export type AuthType =
+    | { kind: 'default' }
+    | { kind: 'ntlm', domain: string }
+// Not using Azure
+// | { kind: 'azure-active-directory-password' }
+// | { kind: 'azure-active-directory-access-token' }
+// | { kind: 'azure-active-directory-msi-vm' }
+// | { kind: 'azure-active-directory-msi-app-service' }
 
 /** Functions implemented in databaseBackground.ts */
 

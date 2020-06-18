@@ -14,13 +14,13 @@
           <el-form-item>
             <el-button @click="close" type="danger">Fermer la connexion</el-button>
           </el-form-item>
-          <el-form-item label="requête :">
+          <el-form-item label="requête">
             <el-input clearable v-model="request" type="textarea" placeholder="requête"></el-input>
           </el-form-item>
           <el-form-item>
             <el-button @click="execute(request)" icon="el-icon-search" type="success">Exécuter</el-button>
           </el-form-item>
-          <el-form-item label="sélection :">
+          <el-form-item label="sélection">
             <template v-if="selection">{{ selection }}</template>
             <template v-else>
               <i class="el-icon-error" />
@@ -35,7 +35,7 @@
       <!-- Login -->
       <template v-else>
         <el-form :model="credentials" label-position="right" label-width="110px">
-          <el-form-item label="url du serveur :">
+          <el-form-item label="url du serveur">
             <el-input v-model="credentials.server" placeholder="url" />
           </el-form-item>
 
@@ -48,24 +48,18 @@
             />
           </el-form-item>
 
-          <el-form-item :label="useInstanceName ? 'instance :' : 'port :'">
+          <el-form-item :label="useInstanceName ? 'instance' : 'port'">
             <el-input v-if="useInstanceName" v-model="credentials.instance" placeholder="instance" />
             <el-input v-else v-model="credentials.port" placeholder="port" />
           </el-form-item>
 
-          <el-form-item label="Authentification">
+          <el-form-item label="authentification">
             <el-row>
               <el-col :span="8">
-                <el-select v-model="authType" placeholder="Type">
-                  <el-option v-for="ty in AUTH_TYPES" :key="ty" :label="ty" :value="ty"></el-option>
-                </el-select>
+                <el-switch v-model="useNTLM" active-text="Utiliser NTLM" />
               </el-col>
               <el-col :span="8">
-                <el-switch
-                  v-model="useTLSv1"
-                  style="margin-left: 10px"
-                  active-text="Utiliser TLSv1"
-                />
+                <el-switch v-model="useTLSv1" active-text="Utiliser TLSv1" />
               </el-col>
               <el-col :span="8">
                 <el-switch v-model="encrypt" active-text="Chiffrer la connexion" />
@@ -73,15 +67,19 @@
             </el-row>
           </el-form-item>
 
-          <el-form-item label="login :">
+          <el-form-item v-if="useNTLM" label="domaine">
+            <el-input v-model="credentials.domain" placeholder="domaine" />
+          </el-form-item>
+
+          <el-form-item label="login">
             <el-input v-model="credentials.userName" placeholder="login" />
           </el-form-item>
 
-          <el-form-item label="mot de passe :">
+          <el-form-item label="mot de passe">
             <el-input v-model="credentials.password" show-password placeholder="mot de passe" />
           </el-form-item>
 
-          <el-form-item label="base :">
+          <el-form-item label="base">
             <el-input v-model="credentials.database" placeholder="base de données" />
           </el-form-item>
 
@@ -91,10 +89,10 @@
         </el-form>
       </template>
 
-      <!-- Results -->
       <template v-if="tableData.length > 0">
-        <el-alert :title="this.resultRequest" type="info" :closable="false"></el-alert>
-        <el-table :data="tableData">
+        <!-- Results -->
+        <el-alert :title="this.lastRequest" type="info" :closable="false"></el-alert>
+        <el-table id="table" :data="tableData">
           <el-table-column
             v-for="column in columnNames"
             :prop="column"
@@ -137,15 +135,17 @@ export default Vue.extend({
     loading: false,
     columnNames: [] as string[],
     tableData: [] as Record<string, string>[],
-    resultRequest: "",
+    lastRequest: "",
     useInstanceName: false,
     useTLSv1: true,
     encrypt: true,
-    authType: "default" as AuthType,
+    // authKind: "default" as AuthType["kind"],
+    useNTLM: true,
     credentials: {
       server: "",
       port: "1433",
       instance: "",
+      domain: "",
       userName: "",
       password: "",
       database: ""
@@ -171,7 +171,10 @@ export default Vue.extend({
         const instanceOrPort: InstanceOrPort = this.useInstanceName
           ? { kind: "instance", instanceName: this.credentials.instance }
           : { kind: "port", port: Number(this.credentials.port) };
-        const { useTLSv1, encrypt, authType } = this;
+        const { useTLSv1, encrypt, useNTLM } = this;
+        const authType: AuthType = useNTLM
+          ? { kind: "ntlm", domain: this.credentials.domain }
+          : { kind: "default" };
 
         await connect(ipcRenderer, {
           ...this.credentials,
@@ -184,6 +187,7 @@ export default Vue.extend({
         this.connected = true;
       } catch (err) {
         this.connected = false;
+        console.error(err);
         this.showError(err);
       }
 
@@ -193,17 +197,20 @@ export default Vue.extend({
     async execute(rq: string) {
       this.loading = true;
       try {
+        this.lastRequest = rq;
+
         let resp = await request(ipcRenderer, rq);
-        this.resultRequest = rq;
         this.tableData = resp.map(row =>
+          // For each column, add a property to the object representing the row
           row.reduce(
-            (acc, current) => ({
+            (acc, currentColumn) => ({
               ...acc,
-              [current.metadata.colName]: current.value
+              [currentColumn.metadata.colName]: currentColumn.value
             }),
             {} as Record<string, string>
           )
         );
+
         this.columnNames =
           resp.length > 0
             ? resp[0].length > 0
@@ -211,6 +218,7 @@ export default Vue.extend({
               : []
             : [];
       } catch (err) {
+        console.error(err);
         this.showError(err);
       }
       this.loading = false;
@@ -221,6 +229,7 @@ export default Vue.extend({
       try {
         await close(ipcRenderer);
       } catch (err) {
+        console.error(err);
         this.showError(err);
       }
       this.connected = false;
@@ -233,5 +242,13 @@ export default Vue.extend({
 <style scoped>
 #div {
   margin: 10px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+#table {
+  overflow: scroll;
 }
 </style>

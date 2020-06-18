@@ -28,10 +28,11 @@ const connectionHandler = async (event: IpcMainInvokeEvent, a: ConnectArgs): Pro
     let config: ConnectionConfig = {
         server,
         authentication: {
-            type: authType,
+            type: authType.kind,
             options: {
                 userName,
                 password,
+                ...authType.kind == "ntlm" ? { domain: authType.domain } : {}
             },
         },
         options: {

@@ -230,4 +230,8 @@ body {
 #columns {
   height: 100vh;
 }
+
+.col.right {
+  height: 100%;
+}
 </style>
