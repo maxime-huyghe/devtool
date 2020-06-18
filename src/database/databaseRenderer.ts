@@ -74,3 +74,30 @@ export async function request(
 ): Promise<ColumnValue[][]> {
     return ipc.invoke(IpcMessages.request, rq)
 }
+
+export function toCsv<T extends string>(columnNames: T[], rows: Record<T, string>[]): string {
+    let csv = ""
+    csv = columnNames.map(csvEscape).join(";")
+
+    for (const row of rows) {
+        let values: string[] = []
+        for (const colName of columnNames) {
+            values.push(csvEscape(row[colName]))
+        }
+        csv += "\n" + values.join(";")
+    }
+
+    return csv
+}
+
+function csvEscape(input: string): string {
+    input = String(input)
+
+    const mustBeEscaped = input.includes('"') || input.includes(';')
+    if (mustBeEscaped) {
+        const escaped = input.replace('"', '""')
+        return `"${escaped}"`
+    }
+
+    return input
+}
