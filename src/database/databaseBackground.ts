@@ -1,6 +1,6 @@
 import { Connection, Request, ConnectionConfig, ColumnValue } from "tedious";
 import { IpcMain, IpcMainInvokeEvent } from 'electron';
-import { IpcMessages, InstanceOrPort, ConnectArgs } from './databaseRenderer';
+import { IpcMessages, ConnectArgs } from './databaseRenderer';
 
 /** Global connection object */
 let connection: Connection | null
@@ -16,26 +16,33 @@ export function installCallbacks(ipcMain: IpcMain) {
 
 const connectionHandler = async (event: IpcMainInvokeEvent, a: ConnectArgs): Promise<void> => {
     console.log('connect')
-    const iop = a.instanceOrPort.kind == 'instance'
-        ? { instanceName: a.instanceOrPort.instanceName }
-        : { port: a.instanceOrPort.port }
+    const { server, instanceOrPort, userName, password, database, encrypt, useTLSv1, authType } = a
+
+    const iop = instanceOrPort.kind == 'instance'
+        ? { instanceName: instanceOrPort.instanceName }
+        : { port: instanceOrPort.port }
+    const tls = useTLSv1
+        ? { cryptoCredentialsDetails: { minVersion: "TLSv1" } }
+        : {}
 
     let config: ConnectionConfig = {
-        server: a.server,
+        server,
         authentication: {
-            type: 'default',
+            type: authType,
             options: {
-                userName: a.userName,
-                password: a.password,
+                userName,
+                password,
             },
         },
         options: {
-            database: a.database,
+            connectTimeout: 3000,
+            database,
             trustServerCertificate: true,
             rowCollectionOnRequestCompletion: true,
-            encrypt: true,
+            encrypt,
             appName: 'devtool',
-            ...iop
+            ...iop,
+            ...tls
         },
     }
 

@@ -39,10 +39,22 @@ type Port = {
     port: number
 }
 
+// https://stackoverflow.com/questions/44480644/typescript-string-union-to-string-array
+export const AUTH_TYPES = [
+    'default', 'ntlm'
+    , 'azure-active-directory-password', 'azure-active-directory-access-token'
+    , 'azure-active-directory-msi-vm', 'azure-active-directory-msi-app-service'
+] as const
+type AuthTypeTuple = typeof AUTH_TYPES
+export type AuthType = AuthTypeTuple[number]
+
 /** Functions implemented in databaseBackground.ts */
 
 /** To keep the arguments in sync between the different parts of the app */
-export type ConnectArgs = { server: string, instanceOrPort: InstanceOrPort, userName: string, password: string, database: string }
+export type ConnectArgs = {
+    server: string, instanceOrPort: InstanceOrPort, userName: string, password: string,
+    database: string, encrypt: boolean, useTLSv1: boolean, authType: AuthType
+}
 export async function connect(ipc: IpcRenderer, args: ConnectArgs): Promise<void> {
     return ipc.invoke(IpcMessages.connect, args)
 }

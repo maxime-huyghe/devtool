@@ -38,6 +38,7 @@
           <el-form-item label="url du serveur :">
             <el-input v-model="credentials.server" placeholder="url" />
           </el-form-item>
+
           <el-form-item>
             <el-switch
               v-model="useInstanceName"
@@ -46,19 +47,44 @@
               inactive-text="Port"
             />
           </el-form-item>
+
           <el-form-item :label="useInstanceName ? 'instance :' : 'port :'">
             <el-input v-if="useInstanceName" v-model="credentials.instance" placeholder="instance" />
             <el-input v-else v-model="credentials.port" placeholder="port" />
           </el-form-item>
+
+          <el-form-item label="Authentification">
+            <el-row>
+              <el-col :span="8">
+                <el-select v-model="authType" placeholder="Type">
+                  <el-option v-for="ty in AUTH_TYPES" :key="ty" :label="ty" :value="ty"></el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="8">
+                <el-switch
+                  v-model="useTLSv1"
+                  style="margin-left: 10px"
+                  active-text="Utiliser TLSv1"
+                />
+              </el-col>
+              <el-col :span="8">
+                <el-switch v-model="encrypt" active-text="Chiffrer la connexion" />
+              </el-col>
+            </el-row>
+          </el-form-item>
+
           <el-form-item label="login :">
             <el-input v-model="credentials.userName" placeholder="login" />
           </el-form-item>
+
           <el-form-item label="mot de passe :">
             <el-input v-model="credentials.password" show-password placeholder="mot de passe" />
           </el-form-item>
+
           <el-form-item label="base :">
             <el-input v-model="credentials.database" placeholder="base de données" />
           </el-form-item>
+
           <el-form-item>
             <el-button @click="connect" type="primary">Se connecter</el-button>
           </el-form-item>
@@ -89,12 +115,15 @@ import {
   close,
   ColumnValue
 } from "@/database/databaseRenderer";
+import {
+  InstanceOrPort,
+  AUTH_TYPES,
+  AuthType
+} from "../database/databaseRenderer";
+
 import { IpcRenderer } from "electron";
-import { InstanceOrPort } from "../database/databaseRenderer";
 // from preload.js
 declare const ipcRenderer: IpcRenderer;
-
-let fn = async () => {};
 
 export default Vue.extend({
   name: "Database",
@@ -104,11 +133,15 @@ export default Vue.extend({
   },
 
   data: () => ({
+    AUTH_TYPES: AUTH_TYPES,
     loading: false,
     columnNames: [] as string[],
     tableData: [] as Record<string, string>[],
     resultRequest: "",
     useInstanceName: false,
+    useTLSv1: true,
+    encrypt: true,
+    authType: "default" as AuthType,
     credentials: {
       server: "",
       port: "1433",
@@ -138,10 +171,14 @@ export default Vue.extend({
         const instanceOrPort: InstanceOrPort = this.useInstanceName
           ? { kind: "instance", instanceName: this.credentials.instance }
           : { kind: "port", port: Number(this.credentials.port) };
+        const { useTLSv1, encrypt, authType } = this;
 
         await connect(ipcRenderer, {
           ...this.credentials,
-          instanceOrPort
+          instanceOrPort,
+          useTLSv1,
+          encrypt,
+          authType
         });
 
         this.connected = true;
