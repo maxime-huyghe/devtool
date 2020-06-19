@@ -55,6 +55,8 @@ declare const dialog: Dialog;
 import _fs from "fs";
 // from preload.js (importing it here doesn't work)
 declare const fs: typeof _fs;
+// from preload.js
+declare const PWD: string;
 
 export default Vue.extend({
   name: "App",
@@ -148,7 +150,8 @@ export default Vue.extend({
 
     async load() {
       const res = await dialog.showOpenDialog({
-        title: "Charger"
+        title: "Charger",
+        defaultPath: PWD
       });
 
       if (res.canceled) return;
