@@ -3,6 +3,7 @@ import { join } from 'path'
 import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { installCallbacks } from './database/databaseBackground'
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib'
+import { menu } from './menu/menuBackground'
 
 declare const __static: string
 
@@ -44,6 +45,8 @@ function createWindow() {
         // Load the index.html when not in development
         win.loadURL('app://./index.html')
     }
+
+    win.setMenu(menu(win.webContents))
 
     win.on('closed', () => {
         win = null

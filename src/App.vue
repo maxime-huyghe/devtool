@@ -14,13 +14,13 @@
                             >
                                 Sauvegarder {{ fileName ? fileName.split('/').pop() : '' }}
                             </el-button>
-                            <el-button @click="saveAs" icon="el-icon-download" type="primary">
+                            <el-button @click="saveDialog" icon="el-icon-download" type="primary">
                                 Sauvegarder sous
                             </el-button>
                         </el-button-group>
                     </el-form-item>
                     <el-form-item>
-                        <el-button @click="load" icon="el-icon-upload2" type="primary">
+                        <el-button @click="loadDialog" icon="el-icon-upload2" type="primary">
                             Charger
                         </el-button>
                     </el-form-item>
@@ -58,15 +58,20 @@ import { Credentials } from './components/Database'
 import Columns from './components/Columns.vue'
 import { TreeData } from 'element-ui/types/tree'
 import { Dialog } from 'electron'
+import { IpcRenderer } from 'electron'
+import _fs from 'fs'
+import { MenuMessages } from './menu/menu'
+
 // from preload.js
 declare const dialog: Dialog
-import _fs from 'fs'
-// from preload.js (importing it here doesn't work)
+// from preload.js (importing it here directly doesn't work, but we need its type)
 declare const fs: typeof _fs
 // from preload.js
 declare const PWD: string
+// from preload.js
+declare const ipcRenderer: IpcRenderer
 
-let defaultCredentials: Credentials = {
+const defaultCredentials: Credentials = {
     server: '',
     port: '1433',
     instance: '',
@@ -150,6 +155,30 @@ export default Vue.extend({
             }
         },
 
+        async newFile() {
+            this.currentExampleId = null
+            this.examples = {}
+            this.treeElements = []
+            this.fileName = ''
+            this.dirty = true
+            this.justCleaned = false
+            this.editorSelection = ''
+            this.credentials = defaultCredentials
+        },
+
+        async saveDialog() {
+            const res = await dialog.showSaveDialog({
+                title: 'Sauvegarder',
+                filters: [{ name: 'Fichiers json', extensions: ['json'] }],
+            })
+
+            if (res.canceled) return
+            if (!res.filePath) return
+
+            this.fileName = res.filePath
+            await this.save(res.filePath)
+        },
+
         async save(fileName: string) {
             const passwordLess = { ...this.credentials }
             passwordLess.password = ''
@@ -170,20 +199,7 @@ export default Vue.extend({
             })
         },
 
-        async saveAs() {
-            const res = await dialog.showSaveDialog({
-                title: 'Sauvegarder',
-                filters: [{ name: 'Fichiers json', extensions: ['json'] }],
-            })
-
-            if (res.canceled) return
-            if (!res.filePath) return
-
-            this.fileName = res.filePath
-            await this.save(res.filePath)
-        },
-
-        async load() {
+        async loadDialog() {
             const res = await dialog.showOpenDialog({
                 title: 'Charger',
                 defaultPath: PWD,
@@ -192,20 +208,25 @@ export default Vue.extend({
             if (res.canceled) return
             if (!res.filePaths[0]) return
 
+            this.load(res.filePaths[0])
+        },
+
+        async load(filename: string) {
             // The file reading code is wrapped in a promise to avoid blocking, as Vue seems to dislike
             // slow click handlers.
-            const loadFile: Promise<string> = new Promise((resolve, reject) => {
-                const file = fs.createReadStream(res.filePaths[0])
-                let content = file.read()
+            const loadFile: Promise<string> = new Promise(async (resolve, reject) => {
+                const file = fs.createReadStream(filename)
+                let content = await file.read()
                 if (!content) {
                     console.log('Retrying file read...')
-                    // This often fails the first time
-                    content = file.read()
+                    // Whatever...
+                    content = await file.read()
                     if (!content) {
-                        const error = `couldn't read file ${res.filePaths[0]}`
+                        const error = `couldn't read file ${filename}`
                         reject(error)
                     }
                 }
+
                 resolve(content)
             })
 
@@ -248,7 +269,7 @@ export default Vue.extend({
                 throw error
             }
 
-            this.fileName = res.filePaths[0]
+            this.fileName = filename
             this.dirty = false
             this.justCleaned = true
             this.treeElements = hasKeys.tree
