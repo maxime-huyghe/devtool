@@ -88,6 +88,11 @@ const closeHandler = (event: IpcMainInvokeEvent): Promise<void> =>
 let newConnection = async (config: ConnectionConfig): Promise<Connection> => new Promise((resolve, reject) => {
     let connection = new Connection(config)
 
+    // Typings are not up to date
+    let _c: any = connection
+    if (_c.connect !== undefined && typeof _c.connect == "function")
+        _c.connect()
+
     connection.on('connect', async (err) => {
         if (err) {
             connection.close()

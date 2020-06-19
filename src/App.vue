@@ -5,14 +5,15 @@
       <div slot="left" class="col left" ref="left">
         <el-form>
           <el-form-item>
-            <!-- Broken for some reason -->
-            <el-button
-              @click="save(fileName)"
-              :disabled="!dirty || fileName === null || fileName === ''"
-              icon="el-icon-download"
-              type="primary"
-            >Sauvegarder {{ fileName ? fileName.split('/').pop() : '' }}</el-button>
-            <el-button @click="saveAs" icon="el-icon-download" type="primary">Sauvegarder sous</el-button>
+            <el-button-group>
+              <el-button
+                @click="save(fileName)"
+                :disabled="!dirty || fileName === null || fileName === ''"
+                icon="el-icon-download"
+                type="primary"
+              >Sauvegarder {{ fileName ? fileName.split('/').pop() : '' }}</el-button>
+              <el-button @click="saveAs" icon="el-icon-download" type="primary">Sauvegarder sous</el-button>
+            </el-button-group>
           </el-form-item>
           <el-form-item>
             <el-button @click="load" icon="el-icon-upload2" type="primary">Charger</el-button>
