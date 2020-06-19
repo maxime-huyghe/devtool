@@ -1,14 +1,11 @@
 import { Connection, Request, ConnectionConfig, ColumnValue } from 'tedious'
 import { IpcMain, IpcMainInvokeEvent } from 'electron'
-import { IpcMessages, ConnectArgs } from './databaseRenderer'
+import { IpcMessages, ConnectArgs } from './renderer'
 
 /** Global connection object */
 let connection: Connection | null
 
 export function installCallbacks(ipcMain: IpcMain) {
-    ipcMain
-
-    // Usable once at program start, and then each time the close handler is invoked
     ipcMain.handle(IpcMessages.connect, connectionHandler)
     ipcMain.handle(IpcMessages.request, requestHandler)
     ipcMain.handle(IpcMessages.close, closeHandler)

@@ -3,29 +3,6 @@
         <columns id="columns" :leftWidth="450" :rightWidth="600">
             <!-- Tree -->
             <div slot="left" class="col left" ref="left">
-                <el-form>
-                    <el-form-item>
-                        <el-button-group>
-                            <el-button
-                                @click="save(fileName)"
-                                :disabled="!dirty || fileName === null || fileName === ''"
-                                icon="el-icon-download"
-                                type="primary"
-                            >
-                                Sauvegarder {{ fileName ? fileName.split('/').pop() : '' }}
-                            </el-button>
-                            <el-button @click="saveDialog" icon="el-icon-download" type="primary">
-                                Sauvegarder sous
-                            </el-button>
-                        </el-button-group>
-                    </el-form-item>
-                    <el-form-item>
-                        <el-button @click="loadDialog" icon="el-icon-upload2" type="primary">
-                            Charger
-                        </el-button>
-                    </el-form-item>
-                </el-form>
-
                 <Tree
                     :onElementClicked="onTreeElementClicked"
                     :elements="treeElements"
@@ -60,6 +37,7 @@ import { TreeData } from 'element-ui/types/tree'
 import { Dialog } from 'electron'
 import { IpcRenderer } from 'electron'
 import _fs from 'fs'
+import { MenuMessages } from './menu/renderer'
 import { setWindowTitle } from './windowTitle/renderer'
 
 // from preload.js
@@ -120,6 +98,32 @@ export default Vue.extend({
         // The database connections credentials
         credentials: { ...defaultCredentials }, // shallow clone
     }),
+
+    async mounted() {
+        const lastFile = localStorage.getItem(localStorageLastFileKey)
+        if (lastFile) {
+            this.load(lastFile)
+        }
+
+        ipcRenderer
+            .on(MenuMessages.New, async () => await this.newFile())
+            .on(MenuMessages.Open, async () => await this.loadDialog())
+            .on(MenuMessages.Save, async () =>
+                this.fileName !== '' ? await this.save(this.fileName) : await this.saveDialog(),
+            )
+            .on(MenuMessages.SaveAs, async () => await this.saveDialog())
+    },
+
+    async beforeDestroy() {},
+
+    destroyed() {
+        // If we don't do this, the listeners will be registered several times if the app is reloaded
+        ipcRenderer
+            .removeAllListeners(MenuMessages.New)
+            .removeAllListeners(MenuMessages.Open)
+            .removeAllListeners(MenuMessages.Save)
+            .removeAllListeners(MenuMessages.SaveAs)
+    },
 
     watch: {
         treeElements() {

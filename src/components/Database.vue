@@ -136,8 +136,15 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { connect, request, close, ColumnValue } from '@/database/databaseRenderer'
-import { InstanceOrPort, AUTH_TYPES, AuthType } from '../database/databaseRenderer'
+import {
+    InstanceOrPort,
+    AUTH_TYPES,
+    AuthType,
+    connect,
+    request,
+    close,
+    ColumnValue,
+} from '../database/renderer'
 import { Credentials } from './Database'
 
 import { IpcRenderer } from 'electron'
@@ -157,7 +164,8 @@ export default Vue.extend({
 
     props: {
         selection: String,
-        [modelProp]: Object as () => Credentials, // just `as Credentials` doesn't work
+        [modelProp]: Object as () => Credentials,
+        // just `Object as Credentials` doesn't work
         // see https://frontendsociety.com/using-a-typescript-interfaces-and-types-as-a-prop-type-in-vuejs-508ab3f83480
     },
 

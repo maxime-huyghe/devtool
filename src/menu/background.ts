@@ -1,5 +1,5 @@
 import { Menu, MenuItem, MenuItemConstructorOptions, WebContents } from 'electron'
-import { MenuMessages } from './menu'
+import { MenuMessages } from './renderer'
 
 export function menu(webContents: WebContents): Menu {
     const template: (MenuItemConstructorOptions | MenuItem)[] = [
