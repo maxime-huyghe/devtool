@@ -39,35 +39,42 @@
             <el-input v-model="credentials.server" placeholder="url" />
           </el-form-item>
 
-          <el-form-item>
-            <el-switch
-              v-model="useInstanceName"
-              border
-              active-text="Nom d'instance"
-              inactive-text="Port"
-            />
-          </el-form-item>
-
-          <el-form-item :label="useInstanceName ? 'instance' : 'port'">
-            <el-input v-if="useInstanceName" v-model="credentials.instance" placeholder="instance" />
-            <el-input v-else v-model="credentials.port" placeholder="port" />
+          <el-form-item :label="credentials.useInstanceName ? 'instance' : 'port'">
+            <el-input
+              v-if="credentials.useInstanceName"
+              v-model="credentials.instance"
+              placeholder="instance"
+            >
+              <el-switch
+                v-model="credentials.useInstanceName"
+                active-text="Instance"
+                slot="append"
+              />
+            </el-input>
+            <el-input v-else v-model="credentials.port" placeholder="port">
+              <el-switch
+                v-model="credentials.useInstanceName"
+                active-text="Instance"
+                slot="append"
+              />
+            </el-input>
           </el-form-item>
 
           <el-form-item label="authentification">
             <el-row>
               <el-col :span="8">
-                <el-switch v-model="useNTLM" active-text="Utiliser NTLM" />
+                <el-switch v-model="credentials.useNTLM" active-text="Utiliser NTLM" />
               </el-col>
               <el-col :span="8">
-                <el-switch v-model="useTLSv1" active-text="Utiliser TLSv1" />
+                <el-switch v-model="credentials.useTLSv1" active-text="Utiliser TLSv1" />
               </el-col>
               <el-col :span="8">
-                <el-switch v-model="encrypt" active-text="Chiffrer la connexion" />
+                <el-switch v-model="credentials.encrypt" active-text="Chiffrer la connexion" />
               </el-col>
             </el-row>
           </el-form-item>
 
-          <el-form-item v-if="useNTLM" label="domaine">
+          <el-form-item v-if="credentials.useNTLM" label="domaine">
             <el-input v-model="credentials.domain" placeholder="domaine" />
           </el-form-item>
 
@@ -118,16 +125,27 @@ import {
   AUTH_TYPES,
   AuthType
 } from "../database/databaseRenderer";
+import { Credentials } from "./Database";
 
 import { IpcRenderer } from "electron";
 // from preload.js
 declare const ipcRenderer: IpcRenderer;
 
+const modelProp = "credentials";
+const modelEvent = "event";
+
 export default Vue.extend({
   name: "Database",
 
+  model: {
+    prop: modelProp,
+    event: modelEvent
+  },
+
   props: {
-    selection: String
+    selection: String,
+    [modelProp]: Object as () => Credentials // just `as Credentials` doesn't work
+    // see https://frontendsociety.com/using-a-typescript-interfaces-and-types-as-a-prop-type-in-vuejs-508ab3f83480
   },
 
   data: () => ({
@@ -136,23 +154,15 @@ export default Vue.extend({
     columnNames: [] as string[],
     tableData: [] as Record<string, string>[],
     lastRequest: "",
-    useInstanceName: false,
-    useTLSv1: true,
-    encrypt: true,
-    // authKind: "default" as AuthType["kind"],
-    useNTLM: true,
-    credentials: {
-      server: "",
-      port: "1433",
-      instance: "",
-      domain: "",
-      userName: "",
-      password: "",
-      database: ""
-    },
     connected: false,
     request: ""
   }),
+
+  watch: {
+    [modelProp](newCredentials) {
+      this.$emit(modelEvent, newCredentials);
+    }
+  },
 
   methods: {
     showError(error: string) {
@@ -168,19 +178,17 @@ export default Vue.extend({
       try {
         this.loading = true;
 
-        const instanceOrPort: InstanceOrPort = this.useInstanceName
-          ? { kind: "instance", instanceName: this.credentials.instance }
-          : { kind: "port", port: Number(this.credentials.port) };
-        const { useTLSv1, encrypt, useNTLM } = this;
-        const authType: AuthType = useNTLM
-          ? { kind: "ntlm", domain: this.credentials.domain }
-          : { kind: "default" };
+        const instanceOrPort: InstanceOrPort = this.credentials.useInstanceName
+          ? { k: "instance", instanceName: this.credentials.instance }
+          : { k: "port", port: Number(this.credentials.port) };
+
+        const authType: AuthType = this.credentials.useNTLM
+          ? { k: "ntlm", domain: this.credentials.domain }
+          : { k: "default" };
 
         await connect(ipcRenderer, {
           ...this.credentials,
           instanceOrPort,
-          useTLSv1,
-          encrypt,
           authType
         });
 

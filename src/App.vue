@@ -8,7 +8,7 @@
             <!-- Broken for some reason -->
             <el-button
               @click="save(fileName)"
-              :disabled="!dirty || fileName == null"
+              :disabled="!dirty || fileName === null || fileName === ''"
               icon="el-icon-download"
               type="primary"
             >Sauvegarder {{ fileName ? fileName.split('/').pop() : '' }}</el-button>
@@ -36,7 +36,7 @@
 
       <!-- Database -->
       <div slot="right" class="col right" ref="right">
-        <Database :selection="editorSelection" />
+        <Database :selection="editorSelection" v-model="credentials" />
       </div>
     </columns>
   </div>
@@ -47,6 +47,7 @@ import Vue from "vue";
 import Tree from "./components/Tree.vue";
 import Editor from "./components/Editor.vue";
 import Database from "./components/Database.vue";
+import { Credentials } from "./components/Database";
 import Columns from "./components/Columns.vue";
 import { TreeData } from "element-ui/types/tree";
 import { Dialog } from "electron";
@@ -57,6 +58,20 @@ import _fs from "fs";
 declare const fs: typeof _fs;
 // from preload.js
 declare const PWD: string;
+
+let defaultCredentials: Credentials = {
+  server: "",
+  port: "1433",
+  instance: "",
+  domain: "",
+  userName: "",
+  password: "",
+  database: "",
+  useInstanceName: true,
+  useTLSv1: true,
+  useNTLM: true,
+  encrypt: true
+};
 
 export default Vue.extend({
   name: "App",
@@ -86,21 +101,30 @@ export default Vue.extend({
     justCleaned: false,
 
     // The text that's selected in the editor.
-    editorSelection: ""
+    editorSelection: "",
+
+    // The database connections credentials
+    credentials: defaultCredentials
   }),
 
   watch: {
     treeElements() {
-      if (!this.justCleaned) this.dirty = true;
-      this.justCleaned = false;
+      this.makeDirty();
     },
     examples() {
-      if (!this.justCleaned) this.dirty = true;
-      this.justCleaned = false;
+      this.makeDirty();
+    },
+    credentials() {
+      this.makeDirty();
     }
   },
 
   methods: {
+    makeDirty() {
+      if (!this.justCleaned) this.dirty = true;
+      this.justCleaned = false;
+    },
+
     showError(error: string) {
       // This is ElementUI's popup system
       this.$message({
@@ -120,12 +144,16 @@ export default Vue.extend({
     },
 
     async save(fileName: string) {
+      const passwordLess = { ...this.credentials };
+      passwordLess.password = "";
+
       return await new Promise(resolve => {
         const file = fs.createWriteStream(fileName);
         file.write(
           JSON.stringify({
             tree: this.treeElements,
-            examples: this.examples
+            examples: this.examples,
+            credentials: passwordLess
           })
         );
         file.close();
@@ -193,16 +221,25 @@ export default Vue.extend({
         throw err;
       }
 
-      if (!properties.includes("tree") || !properties.includes("examples")) {
-        const error = "file lacks `tree` and/or `examples` fields";
+      const requiredProperties = ["tree", "examples", "credentials"];
+      const missingProperties = requiredProperties.filter(
+        rp => !properties.includes(rp)
+      );
+      if (missingProperties.length > 0) {
+        const error = `file lacks fields ${missingProperties.join(", ")}.`;
         this.showError(error);
         throw error;
       }
 
-      const hasKeys = parsed as { tree: any; examples: any };
+      const hasKeys = parsed as { tree: any; examples: any; credentials: any };
 
-      if (!Array.isArray(hasKeys.tree) || typeof hasKeys.examples != "object") {
-        const error = "`tree` should be an array and examples an object";
+      if (
+        !Array.isArray(hasKeys.tree) ||
+        typeof hasKeys.examples !== "object" ||
+        typeof hasKeys.credentials !== "object"
+      ) {
+        const error =
+          "`tree` should be an array, examples and credentials objects";
         this.showError(error);
         throw error;
       }
@@ -212,6 +249,7 @@ export default Vue.extend({
       this.justCleaned = true;
       this.treeElements = hasKeys.tree;
       this.examples = hasKeys.examples;
+      this.credentials = hasKeys.credentials;
     }
   }
 });

@@ -18,7 +18,7 @@ const connectionHandler = async (event: IpcMainInvokeEvent, a: ConnectArgs): Pro
     console.log('connect')
     const { server, instanceOrPort, userName, password, database, encrypt, useTLSv1, authType } = a
 
-    const iop = instanceOrPort.kind == 'instance'
+    const iop = instanceOrPort.k == 'instance'
         ? { instanceName: instanceOrPort.instanceName }
         : { port: instanceOrPort.port }
     const tls = useTLSv1
@@ -28,11 +28,11 @@ const connectionHandler = async (event: IpcMainInvokeEvent, a: ConnectArgs): Pro
     let config: ConnectionConfig = {
         server,
         authentication: {
-            type: authType.kind,
+            type: authType.k,
             options: {
                 userName,
                 password,
-                ...authType.kind == "ntlm" ? { domain: authType.domain } : {}
+                ...authType.k == "ntlm" ? { domain: authType.domain } : {}
             },
         },
         options: {

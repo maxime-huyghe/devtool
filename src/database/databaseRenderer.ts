@@ -29,25 +29,20 @@ export enum IpcMessages {
 }
 
 // see: https://www.typescriptlang.org/docs/handbook/advanced-types.html#discriminated-unions
-export type InstanceOrPort = Instance | Port
-type Instance = {
-    kind: 'instance',
-    instanceName: string
-}
-type Port = {
-    kind: 'port',
-    port: number
-}
+// k == kind
+export type InstanceOrPort =
+    | { k: 'instance', instanceName: string }
+    | { k: 'port', port: number }
 
-export const AUTH_TYPES: AuthType['kind'][] = [
+export const AUTH_TYPES: AuthType['k'][] = [
     'default', 'ntlm'
     // , 'azure-active-directory-password', 'azure-active-directory-access-token'
     // , 'azure-active-directory-msi-vm', 'azure-active-directory-msi-app-service'
 ]
 
 export type AuthType =
-    | { kind: 'default' }
-    | { kind: 'ntlm', domain: string }
+    | { k: 'default' }
+    | { k: 'ntlm', domain: string }
 // Not using Azure
 // | { kind: 'azure-active-directory-password' }
 // | { kind: 'azure-active-directory-access-token' }
