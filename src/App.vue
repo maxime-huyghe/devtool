@@ -60,7 +60,7 @@ import { TreeData } from 'element-ui/types/tree'
 import { Dialog } from 'electron'
 import { IpcRenderer } from 'electron'
 import _fs from 'fs'
-import { MenuMessages } from './menu/menu'
+import { setWindowTitle } from './windowTitle/renderer'
 
 // from preload.js
 declare const dialog: Dialog
@@ -70,6 +70,8 @@ declare const fs: typeof _fs
 declare const PWD: string
 // from preload.js
 declare const ipcRenderer: IpcRenderer
+
+const localStorageLastFileKey = 'lastFile'
 
 const defaultCredentials: Credentials = {
     server: '',
@@ -116,7 +118,7 @@ export default Vue.extend({
         editorSelection: '',
 
         // The database connections credentials
-        credentials: defaultCredentials,
+        credentials: { ...defaultCredentials }, // shallow clone
     }),
 
     watch: {
@@ -128,6 +130,22 @@ export default Vue.extend({
         },
         credentials() {
             this.makeDirty()
+        },
+        fileName(newFileName: string) {
+            let title
+            if (newFileName === '') {
+                title = 'devtool'
+            } else {
+                title = `devtool - ${newFileName
+                    .split('/')
+                    .pop()
+                    ?.split('\\')
+                    .pop()}`
+
+                localStorage.setItem(localStorageLastFileKey, this.fileName)
+            }
+
+            setWindowTitle(ipcRenderer, title)
         },
     },
 

@@ -3,7 +3,7 @@ import { join } from 'path'
 import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { installCallbacks } from './database/databaseBackground'
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib'
-import { menu } from './menu/menuBackground'
+import { installWindowTitleCallback } from './windowTitle/background'
 
 declare const __static: string
 
@@ -46,7 +46,8 @@ function createWindow() {
         win.loadURL('app://./index.html')
     }
 
-    win.setMenu(menu(win.webContents))
+    // win.setMenu(menu(win.webContents))
+    installWindowTitleCallback(ipcMain, win)
 
     win.on('closed', () => {
         win = null
