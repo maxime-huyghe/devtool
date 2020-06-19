@@ -1,6 +1,6 @@
-import { Connection, Request, ConnectionConfig, ColumnValue } from "tedious";
-import { IpcMain, IpcMainInvokeEvent } from 'electron';
-import { IpcMessages, ConnectArgs } from './databaseRenderer';
+import { Connection, Request, ConnectionConfig, ColumnValue } from 'tedious'
+import { IpcMain, IpcMainInvokeEvent } from 'electron'
+import { IpcMessages, ConnectArgs } from './databaseRenderer'
 
 /** Global connection object */
 let connection: Connection | null
@@ -14,16 +14,15 @@ export function installCallbacks(ipcMain: IpcMain) {
     ipcMain.handle(IpcMessages.close, closeHandler)
 }
 
-const connectionHandler = async (event: IpcMainInvokeEvent, a: ConnectArgs): Promise<void> => {
+const connectionHandler = async (_: IpcMainInvokeEvent, a: ConnectArgs): Promise<void> => {
     console.log('connect')
     const { server, instanceOrPort, userName, password, database, encrypt, useTLSv1, authType } = a
 
-    const iop = instanceOrPort.k == 'instance'
-        ? { instanceName: instanceOrPort.instanceName }
-        : { port: instanceOrPort.port }
-    const tls = useTLSv1
-        ? { cryptoCredentialsDetails: { minVersion: "TLSv1" } }
-        : {}
+    const iop =
+        instanceOrPort.k == 'instance'
+            ? { instanceName: instanceOrPort.instanceName }
+            : { port: instanceOrPort.port }
+    const tls = useTLSv1 ? { cryptoCredentialsDetails: { minVersion: 'TLSv1' } } : {}
 
     let config: ConnectionConfig = {
         server,
@@ -32,7 +31,7 @@ const connectionHandler = async (event: IpcMainInvokeEvent, a: ConnectArgs): Pro
             options: {
                 userName,
                 password,
-                ...authType.k == "ntlm" ? { domain: authType.domain } : {}
+                ...(authType.k == 'ntlm' ? { domain: authType.domain } : {}),
             },
         },
         options: {
@@ -43,7 +42,7 @@ const connectionHandler = async (event: IpcMainInvokeEvent, a: ConnectArgs): Pro
             encrypt,
             appName: 'devtool',
             ...iop,
-            ...tls
+            ...tls,
         },
     }
 
@@ -60,13 +59,13 @@ const requestHandler = (event: IpcMainInvokeEvent, rq: string): Promise<ColumnVa
         console.log('request')
         let request = new Request(rq, (err, _rowCount, rows) => {
             if (err) {
-                reject((err));
+                reject(err)
             }
 
             resolve(rows as ColumnValue[][])
-        });
+        })
 
-        connection!.execSql(request);
+        connection!.execSql(request)
     })
 
 const closeHandler = (event: IpcMainInvokeEvent): Promise<void> =>
@@ -84,22 +83,21 @@ const closeHandler = (event: IpcMainInvokeEvent): Promise<void> =>
         }
     })
 
+let newConnection = async (config: ConnectionConfig): Promise<Connection> =>
+    new Promise((resolve, reject) => {
+        let connection = new Connection(config)
 
-let newConnection = async (config: ConnectionConfig): Promise<Connection> => new Promise((resolve, reject) => {
-    let connection = new Connection(config)
+        // Typings are not up to date
+        let _c: any = connection
+        if (_c.connect !== undefined && typeof _c.connect == 'function') _c.connect()
 
-    // Typings are not up to date
-    let _c: any = connection
-    if (_c.connect !== undefined && typeof _c.connect == "function")
-        _c.connect()
-
-    connection.on('connect', async (err) => {
-        if (err) {
-            connection.close()
-            console.log(err)
-            reject(err)
-        } else {
-            resolve(connection)
-        }
+        connection.on('connect', async err => {
+            if (err) {
+                connection.close()
+                console.log(err)
+                reject(err)
+            } else {
+                resolve(connection)
+            }
+        })
     })
-})

@@ -2,12 +2,9 @@
 import { join } from 'path'
 import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { installCallbacks } from './database/databaseBackground'
-import {
-    createProtocol,
-    installVueDevtools,
-} from 'vue-cli-plugin-electron-builder/lib'
+import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib'
 
-declare const __static: string;
+declare const __static: string
 
 installCallbacks(ipcMain)
 
@@ -20,7 +17,9 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 let win: BrowserWindow | null
 
 // Scheme must be registered before the app is ready
-protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { secure: true, standard: true } }])
+protocol.registerSchemesAsPrivileged([
+    { scheme: 'app', privileges: { secure: true, standard: true } },
+])
 
 function createWindow() {
     // Create the browser window.
@@ -32,8 +31,8 @@ function createWindow() {
             // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
             nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION as boolean | undefined,
             preload: join(__static, 'preload.js'),
-            enableRemoteModule: true
-        }
+            enableRemoteModule: true,
+        },
     })
 
     if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -87,7 +86,6 @@ app.on('ready', async () => {
         } catch (e) {
             console.error('Vue Devtools failed to install:', e.toString())
         }
-
     }
     createWindow()
 })
