@@ -88,9 +88,6 @@ export default Vue.extend({
 
         // Whether the data was modified since the file was last loaded or saved.
         dirty: false,
-        // If this is true, do not set dirty when the data is modified
-        // because it means the modification comes from loading from disk.
-        justCleaned: false,
 
         // The text that's selected in the editor.
         editorSelection: '',
@@ -126,37 +123,45 @@ export default Vue.extend({
     },
 
     watch: {
-        treeElements() {
-            this.makeDirty()
+        treeElements: {
+            handler() {
+                this.makeDirty()
+            },
+            deep: true,
         },
-        examples() {
-            this.makeDirty()
+        examples: {
+            handler() {
+                this.makeDirty()
+            },
+            deep: true,
         },
-        credentials() {
-            this.makeDirty()
+        credentials: {
+            handler() {
+                this.makeDirty()
+            },
+            deep: true,
+        },
+        dirty(newDirtyness: boolean) {
+            this.updateTitle(this.fileName, newDirtyness)
         },
         fileName(newFileName: string) {
-            let title
-            if (newFileName === '') {
-                title = 'devtool'
-            } else {
-                title = `devtool - ${newFileName
-                    .split('/')
-                    .pop()
-                    ?.split('\\')
-                    .pop()}`
-
-                localStorage.setItem(localStorageLastFileKey, this.fileName)
-            }
-
-            setWindowTitle(ipcRenderer, title)
+            this.updateTitle(newFileName, this.dirty)
+            if (newFileName !== '') localStorage.setItem(localStorageLastFileKey, this.fileName)
         },
     },
 
     methods: {
         makeDirty() {
-            if (!this.justCleaned) this.dirty = true
-            this.justCleaned = false
+            this.dirty = true
+        },
+
+        updateTitle(filename: string, dirty: boolean) {
+            const fn = filename
+                .split('/')
+                .pop()
+                ?.split('\\')
+                .pop() as string
+            setWindowTitle(ipcRenderer, fn, dirty)
         },
 
         showError(error: string) {
@@ -183,7 +188,6 @@ export default Vue.extend({
             this.treeElements = []
             this.fileName = ''
             this.dirty = true
-            this.justCleaned = false
             this.editorSelection = ''
             this.credentials = defaultCredentials
         },
@@ -292,11 +296,12 @@ export default Vue.extend({
             }
 
             this.fileName = filename
-            this.dirty = false
-            this.justCleaned = true
             this.treeElements = hasKeys.tree
             this.examples = hasKeys.examples
             this.credentials = hasKeys.credentials
+
+            await Vue.nextTick()
+            this.dirty = false
         },
     },
 })

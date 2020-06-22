@@ -100,11 +100,17 @@ export default Vue.extend({
 
     watch: {
         /// Having two watchers like this is way simpler than using v-model
-        elements(newElts) {
-            this.elements_ = newElts
+        elements: {
+            handler(newElts) {
+                this.elements_ = newElts
+            },
+            deep: true,
         },
-        elements_(newElts) {
-            this.onElementsChange(newElts)
+        elements_: {
+            handler(newElts) {
+                this.onElementsChange(newElts)
+            },
+            deep: true,
         },
     },
 
