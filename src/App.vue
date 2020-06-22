@@ -39,6 +39,7 @@ import { IpcRenderer } from 'electron'
 import _fs from 'fs'
 import { MenuMessages } from './menu/renderer'
 import { setWindowTitle } from './windowTitle/renderer'
+import { saveToFile, loadFromFile } from './persistence/renderer'
 
 // from preload.js
 declare const dialog: Dialog
@@ -206,23 +207,14 @@ export default Vue.extend({
         },
 
         async save(fileName: string) {
-            const passwordLess = { ...this.credentials }
-            passwordLess.password = ''
-
-            return await new Promise(resolve => {
-                const file = fs.createWriteStream(fileName)
-                file.write(
-                    JSON.stringify({
-                        tree: this.treeElements,
-                        examples: this.examples,
-                        credentials: passwordLess,
-                    }),
-                )
-                file.close()
-
-                this.dirty = false
-                resolve()
+            saveToFile(ipcRenderer, {
+                filename: this.fileName,
+                credentials: this.credentials,
+                treeElements: this.treeElements,
+                examples: this.examples,
             })
+
+            this.dirty = false
         },
 
         async loadDialog() {
@@ -237,71 +229,26 @@ export default Vue.extend({
             this.load(res.filePaths[0])
         },
 
-        async load(filename: string) {
-            // The file reading code is wrapped in a promise to avoid blocking, as Vue seems to dislike
-            // slow click handlers.
-            const loadFile: Promise<string> = new Promise(async (resolve, reject) => {
-                const file = fs.createReadStream(filename)
-                let content = await file.read()
-                if (!content) {
-                    console.log('Retrying file read...')
-                    // Whatever...
-                    content = await file.read()
-                    if (!content) {
-                        const error = `couldn't read file ${filename}`
-                        reject(error)
-                    }
-                }
-
-                resolve(content)
-            })
-
-            let fileContent: string
+        async load(file: string) {
             try {
-                fileContent = await loadFile
+                const { filename, treeElements, examples, credentials } = await loadFromFile(
+                    ipcRenderer,
+                    file,
+                )
+
+                this.fileName = filename
+                this.treeElements = treeElements
+                this.examples = examples
+                this.credentials = credentials
+
+                await Vue.nextTick()
+                // Waiting for the next tick because changing treeElements, examples, etc
+                // will automatically set dirty : we want to unset it after.
+                this.dirty = false
             } catch (error) {
                 this.showError(error)
                 throw error
             }
-
-            let parsed: any
-            let properties: string[]
-            try {
-                parsed = JSON.parse(fileContent.toString())
-                properties = Object.getOwnPropertyNames(parsed)
-            } catch (error) {
-                const err = `not valid json: ${error.toString()}`
-                this.showError(err)
-                throw err
-            }
-
-            const requiredProperties = ['tree', 'examples', 'credentials']
-            const missingProperties = requiredProperties.filter(rp => !properties.includes(rp))
-            if (missingProperties.length > 0) {
-                const error = `file lacks fields ${missingProperties.join(', ')}.`
-                this.showError(error)
-                throw error
-            }
-
-            const hasKeys = parsed as { tree: any; examples: any; credentials: any }
-
-            if (
-                !Array.isArray(hasKeys.tree) ||
-                typeof hasKeys.examples !== 'object' ||
-                typeof hasKeys.credentials !== 'object'
-            ) {
-                const error = '`tree` should be an array, examples and credentials objects'
-                this.showError(error)
-                throw error
-            }
-
-            this.fileName = filename
-            this.treeElements = hasKeys.tree
-            this.examples = hasKeys.examples
-            this.credentials = hasKeys.credentials
-
-            await Vue.nextTick()
-            this.dirty = false
         },
     },
 })

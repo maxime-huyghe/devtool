@@ -5,6 +5,7 @@ import { installCallbacks } from './database/background'
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib'
 import { menu } from './menu/background'
 import { installWindowTitleCallback } from './windowTitle/background'
+import { installPersistenceCallbacks } from './persistence/background'
 
 declare const __static: string
 
@@ -49,6 +50,7 @@ function createWindow() {
 
     win.setMenu(menu(win.webContents))
     installWindowTitleCallback(ipcMain, win)
+    installPersistenceCallbacks()
 
     win.on('closed', () => {
         win = null
