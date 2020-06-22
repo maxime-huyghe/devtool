@@ -85,7 +85,7 @@ export default Vue.extend({
         treeElements: [] as TreeData[],
 
         // The currently opened file.
-        fileName: '',
+        filename: '',
 
         // Whether the data was modified since the file was last loaded or saved.
         dirty: false,
@@ -107,12 +107,10 @@ export default Vue.extend({
             .on(MenuMessages.New, async () => await this.newFile())
             .on(MenuMessages.Open, async () => await this.loadDialog())
             .on(MenuMessages.Save, async () =>
-                this.fileName !== '' ? await this.save(this.fileName) : await this.saveDialog(),
+                this.filename !== '' ? await this.save(this.filename) : await this.saveDialog(),
             )
             .on(MenuMessages.SaveAs, async () => await this.saveDialog())
     },
-
-    async beforeDestroy() {},
 
     destroyed() {
         // If we don't do this, the listeners will be registered several times if the app is reloaded
@@ -143,17 +141,34 @@ export default Vue.extend({
             deep: true,
         },
         dirty(newDirtyness: boolean) {
-            this.updateTitle(this.fileName, newDirtyness)
+            this.updateTitle(this.filename, newDirtyness)
+            this.updateAutoSave()
         },
         fileName(newFileName: string) {
             this.updateTitle(newFileName, this.dirty)
-            if (newFileName !== '') localStorage.setItem(localStorageLastFileKey, this.fileName)
+            if (newFileName !== '') localStorage.setItem(localStorageLastFileKey, this.filename)
         },
     },
 
     methods: {
         makeDirty() {
             this.dirty = true
+        },
+
+        // The auto-save state is kept in a VueX store
+        updateAutoSave() {
+            if (this.dirty && this.filename !== '')
+                this.$store.commit('autoSave', {
+                    save: true,
+                    args: {
+                        filename: this.filename,
+                        treeElements: this.treeElements,
+                        examples: this.examples,
+                        credentials: this.credentials,
+                    },
+                })
+            else this.$store.commit('autoSave', { save: false })
+            // this.$store.commit('autoSave')
         },
 
         updateTitle(filename: string, dirty: boolean) {
@@ -187,7 +202,7 @@ export default Vue.extend({
             this.currentExampleId = null
             this.examples = {}
             this.treeElements = []
-            this.fileName = ''
+            this.filename = ''
             this.dirty = true
             this.editorSelection = ''
             this.credentials = defaultCredentials
@@ -202,13 +217,13 @@ export default Vue.extend({
             if (res.canceled) return
             if (!res.filePath) return
 
-            this.fileName = res.filePath
+            this.filename = res.filePath
             await this.save(res.filePath)
         },
 
         async save(fileName: string) {
-            saveToFile(ipcRenderer, {
-                filename: this.fileName,
+            await saveToFile(ipcRenderer, {
+                filename: this.filename,
                 credentials: this.credentials,
                 treeElements: this.treeElements,
                 examples: this.examples,
@@ -236,7 +251,7 @@ export default Vue.extend({
                     file,
                 )
 
-                this.fileName = filename
+                this.filename = filename
                 this.treeElements = treeElements
                 this.examples = examples
                 this.credentials = credentials

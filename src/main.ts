@@ -5,6 +5,7 @@ import 'element-ui/lib/theme-chalk/index.css'
 import Element from 'element-ui'
 import { close } from './database/renderer'
 import { IpcRenderer } from 'electron'
+import { saveToFile } from './persistence/renderer'
 // `ipcRenderer` is added to the `window` object in preload.js
 export declare const ipcRenderer: IpcRenderer
 
@@ -18,6 +19,10 @@ let app = new Vue({
     el: '#app',
 })
 
-window.onbeforeunload = (e: BeforeUnloadEvent) => {
+window.addEventListener('beforeunload', async (e: BeforeUnloadEvent) => {
     close(ipcRenderer)
-}
+
+    const args = store.state.autoSaveArgs
+
+    if (args.save) await saveToFile(ipcRenderer, args.args)
+})

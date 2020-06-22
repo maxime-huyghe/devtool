@@ -1,31 +1,35 @@
 import { ipcMain, IpcMainInvokeEvent } from 'electron'
 import { PersistenceMessages, SaveArgs, LoadRet } from './renderer'
-import { createWriteStream, createReadStream, readFile } from 'fs'
+import { readFile, writeFile } from 'fs'
 /** Everything needed to save/load a file to/from disk */
 
 export function installPersistenceCallbacks() {
-    ipcMain.handle(PersistenceMessages.Save, (_: IpcMainInvokeEvent, args: SaveArgs): void => {
-        const passwordLess = { ...args.credentials }
-        passwordLess.password = ''
+    ipcMain.handle(
+        PersistenceMessages.Save,
+        async (_: IpcMainInvokeEvent, args: SaveArgs): Promise<void> => {
+            const passwordLess = { ...args.credentials }
+            passwordLess.password = ''
 
-        const file = createWriteStream(args.filename)
-        file.write(
-            JSON.stringify({
+            let content = JSON.stringify({
                 treeElements: args.treeElements,
                 examples: args.examples,
                 credentials: passwordLess,
-            }),
-        )
-        file.close()
-    })
+            })
+
+            return new Promise((resolve, reject) => {
+                writeFile(args.filename, content, err => {
+                    err ? reject(err) : resolve()
+                })
+            })
+        },
+    )
 
     ipcMain.handle(
         PersistenceMessages.Load,
         async (_: IpcMainInvokeEvent, filename: string): Promise<LoadRet> => {
             const fileContent: string = await new Promise((resolve, reject) => {
                 readFile(filename, 'utf8', (err, data) => {
-                    if (err) reject(err)
-                    resolve(data)
+                    err ? reject(err) : resolve(data)
                 })
             })
 

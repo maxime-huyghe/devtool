@@ -1,15 +1,16 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import { AutoSaveArgs } from '../autosave'
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
     state: {
-        count: 0,
+        autoSaveArgs: {} as AutoSaveArgs,
     },
     mutations: {
-        increment(state) {
-            state.count++
+        autoSave(state, args: AutoSaveArgs) {
+            state.autoSaveArgs = args
         },
     },
     actions: {},
