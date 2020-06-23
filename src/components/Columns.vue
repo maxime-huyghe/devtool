@@ -37,8 +37,12 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import { debounce } from 'lodash'
 
 const minWidth = 150
+
+const rightColKey = 'right'
+const leftColKey = 'left'
 
 export default Vue.extend({
     name: 'Columns',
@@ -61,7 +65,7 @@ export default Vue.extend({
     },
 
     async mounted() {
-        await this.$nextTick
+        await Vue.nextTick()
 
         const parent = this.$refs.parent as HTMLElement
         const right = this.$refs.right as HTMLElement
@@ -69,10 +73,26 @@ export default Vue.extend({
         const handleRight = this.$refs.handleRight as HTMLElement
         const handleLeft = this.$refs.handleLeft as HTMLElement
 
+        const rightWidth = Number(localStorage.getItem(rightColKey))
+        if (rightWidth) {
+            this.rw = rightWidth
+        }
         right.style.width = this.rw + 'px'
+
+        const leftWidth = Number(localStorage.getItem(leftColKey))
+        if (leftWidth) {
+            this.lw = leftWidth
+        }
         left.style.width = this.lw + 'px'
 
         // Using native html handlers instead of Vue v-on directives for performance reasons.
+
+        // Set column width in localstorage to width in data. Debounced for perf reasons.
+        const setRightWidth = debounce(
+            () => localStorage.setItem(rightColKey, String(this.rw)),
+            100,
+        )
+        const setLeftWidth = debounce(() => localStorage.setItem(leftColKey, String(this.lw)), 100)
 
         // Handles the drag motion.
         const mouseMove = (ev: MouseEvent) => {
@@ -80,10 +100,12 @@ export default Vue.extend({
             if (this.rDragged) {
                 this.rw -= ev.movementX
                 right.style.width = Math.max(this.rw, minWidth) + 'px'
+                setRightWidth()
             }
             if (this.lDragged) {
                 this.lw += ev.movementX
                 left.style.width = Math.max(this.lw, minWidth) + 'px'
+                setLeftWidth()
             }
         }
 
@@ -106,14 +128,14 @@ export default Vue.extend({
     },
 
     beforeDestroy() {
+        // If we don't do this, the application will act strange when it is reloaded
         const handleRight = this.$refs.handleRight as HTMLElement
         const handleLeft = this.$refs.handleLeft as HTMLElement
-
-        ;[handleLeft, handleRight].forEach(col => {
-            col.onmousedown = null
-            col.onmousemove = null
-            col.onmouseup = null
-            col.onmouseleave = null
+        ;[handleLeft, handleRight].forEach(handle => {
+            handle.onmousedown = null
+            handle.onmousemove = null
+            handle.onmouseup = null
+            handle.onmouseleave = null
         })
     },
 })
