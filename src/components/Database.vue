@@ -129,6 +129,9 @@
                         :key="column"
                     ></el-table-column>
                 </el-table>
+                <el-button @click="exportDialog" type="primary" style="margin-top: 10px">
+                    Exporter (CSV)
+                </el-button>
             </template>
         </template>
     </div>
@@ -144,12 +147,16 @@ import {
     request,
     close,
     ColumnValue,
+    toCsv,
 } from '../database/renderer'
 import { Credentials } from './Database'
 
-import { IpcRenderer } from 'electron'
+import { IpcRenderer, Dialog } from 'electron'
+import { saveStringToFile } from '../persistence/renderer'
 // from preload.js
 declare const ipcRenderer: IpcRenderer
+// from preload.js
+declare const dialog: Dialog
 
 const modelProp = 'credentials'
 const modelEvent = 'event'
@@ -263,6 +270,24 @@ export default Vue.extend({
             }
             this.connected = false
             this.loading = false
+        },
+
+        async exportDialog() {
+            const res = await dialog.showSaveDialog({
+                title: 'Export CSV',
+                filters: [
+                    { name: 'Fichiers csv', extensions: ['csv'] },
+                    { name: 'Tous les fichiers', extensions: ['*'] },
+                ],
+            })
+
+            if (res.canceled) return
+            if (!res.filePath) return
+
+            saveStringToFile(ipcRenderer, {
+                filename: res.filePath,
+                toBeSaved: toCsv(this.columnNames, this.tableData),
+            })
         },
     },
 })

@@ -1,5 +1,5 @@
 import { ipcMain, IpcMainInvokeEvent } from 'electron'
-import { PersistenceMessages, SaveArgs, LoadRet } from './renderer'
+import { PersistenceMessages, SaveArgs, LoadRet, SaveStringArgs } from './renderer'
 import { readFile, writeFile } from 'fs'
 /** Everything needed to save/load a file to/from disk */
 
@@ -18,6 +18,17 @@ export function installPersistenceCallbacks() {
 
             return new Promise((resolve, reject) => {
                 writeFile(args.filename, content, err => {
+                    err ? reject(err) : resolve()
+                })
+            })
+        },
+    )
+
+    ipcMain.handle(
+        PersistenceMessages.SaveString,
+        async (_: IpcMainInvokeEvent, args: SaveStringArgs): Promise<void> => {
+            return new Promise((resolve, reject) => {
+                writeFile(args.filename, args.toBeSaved, err => {
                     err ? reject(err) : resolve()
                 })
             })

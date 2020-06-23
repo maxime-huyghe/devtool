@@ -211,7 +211,10 @@ export default Vue.extend({
         async saveDialog() {
             const res = await dialog.showSaveDialog({
                 title: 'Sauvegarder',
-                filters: [{ name: 'Fichiers json', extensions: ['json'] }],
+                filters: [
+                    { name: 'Fichiers json', extensions: ['json'] },
+                    { name: 'Tous les fichiers', extensions: ['*'] },
+                ],
             })
 
             if (res.canceled) return
