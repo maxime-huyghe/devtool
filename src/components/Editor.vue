@@ -9,6 +9,9 @@
                     :value="lang.name"
                 />
             </el-select>
+            <el-select v-model="selectedTheme" filterable placeholder="Theme">
+                <el-option v-for="t in themes" :label="t.display" :key="t.name" :value="t.name" />
+            </el-select>
         </div>
         <div id="editor" />
     </div>
@@ -35,10 +38,30 @@ export default Vue.extend({
     data: () => {
         // List here: https://github.com/ajaxorg/ace/blob/master/lib/ace/ext/modelist.js#L53
         const languages = editorModes
+        const themes = [
+            {
+                name: 'dracula',
+                display: 'Dracula',
+            },
+            {
+                name: 'solarized_dark',
+                display: 'Solarized Dark',
+            },
+            {
+                name: 'solarized_light',
+                display: 'Solarized Light',
+            },
+            {
+                name: 'textmate',
+                display: 'Textmate',
+            },
+        ]
         return {
             editor: null as ReturnType<typeof Ace.edit> | null,
             languages,
             selectedLanguage: languages[0].name,
+            themes,
+            selectedTheme: themes[0].name,
         }
     },
 
@@ -62,6 +85,7 @@ export default Vue.extend({
     mounted() {
         this.editor = Ace.edit('editor') // HTML element with id `editor`
         this.editor.session.setMode(`ace/mode/${this.selectedLanguage}`)
+        this.editor.setTheme('ace/theme/dracula')
         this.editor.setValue(this.edited)
 
         this.editor.on('change', () => {
@@ -94,6 +118,10 @@ export default Vue.extend({
 
         selectedLanguage(newLang) {
             this.editor?.session.setMode(`ace/mode/${newLang}`)
+        },
+
+        selectedTheme(newTheme) {
+            this.editor?.setTheme(`ace/theme/${newTheme}`)
         },
     },
 })

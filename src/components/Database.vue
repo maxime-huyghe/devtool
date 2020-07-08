@@ -286,7 +286,7 @@ export default Vue.extend({
 
             saveStringToFile(ipcRenderer, {
                 filename: res.filePath,
-                toBeSaved: toCsv(this.columnNames, this.tableData),
+                string: toCsv(this.columnNames, this.tableData),
             })
         },
     },

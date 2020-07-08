@@ -1,4 +1,6 @@
 export const editorModes = Object.entries({
+    CSharp: ['cs'],
+    SQLServer: ['sqlserver'],
     ABAP: ['abap'],
     ABC: ['abc'],
     ActionScript: ['as'],
@@ -20,7 +22,6 @@ export const editorModes = Object.entries({
     coffee: ['coffee|cf|cson|^Cakefile'],
     ColdFusion: ['cfm'],
     Crystal: ['cr'],
-    CSharp: ['cs'],
     Csound_Document: ['csd'],
     Csound_Orchestra: ['orc'],
     Csound_Score: ['sco'],
@@ -138,7 +139,6 @@ export const editorModes = Object.entries({
     Soy_Template: ['soy'],
     Space: ['space'],
     SQL: ['sql'],
-    SQLServer: ['sqlserver'],
     Stylus: ['styl|stylus'],
     SVG: ['svg'],
     Swift: ['swift'],

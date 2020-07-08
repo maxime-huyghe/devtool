@@ -20,7 +20,7 @@ export async function saveToFile(ipc: IpcRenderer, args: SaveArgs): Promise<void
 
 export type SaveStringArgs = {
     filename: string
-    toBeSaved: string
+    string: string
 }
 export async function saveStringToFile(ipc: IpcRenderer, args: SaveStringArgs): Promise<void> {
     return ipc.invoke(PersistenceMessages.SaveString, args)

@@ -28,7 +28,7 @@ export function installPersistenceCallbacks() {
         PersistenceMessages.SaveString,
         async (_: IpcMainInvokeEvent, args: SaveStringArgs): Promise<void> => {
             return new Promise((resolve, reject) => {
-                writeFile(args.filename, args.toBeSaved, err => {
+                writeFile(args.filename, args.string, err => {
                     err ? reject(err) : resolve()
                 })
             })
