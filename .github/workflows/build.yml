@@ -29,7 +29,7 @@ jobs:
             - uses: actions/upload-artifact@v2
               with:
                   name: Devtool Linux Appimage
-                  path: dist_electron/devtool*.Appimage
+                  path: dist_electron/devtool*.AppImage
 
             - uses: actions/upload-artifact@v2
               with:
@@ -47,7 +47,7 @@ jobs:
             - uses: actions/upload-artifact@v2
               with:
                   name: Devtool Windows Installer
-                  path: dist_electron/devtool*.exe
+                  path: dist_electron/*Setup*.exe
 
             - uses: actions/upload-artifact@v2
               with:
