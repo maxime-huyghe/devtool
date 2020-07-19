@@ -1,33 +1,55 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: build
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: push
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    # This workflow contains a single job called "build"
+    build:
+        # The type of runner that the job will run on
+        runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
+        # Steps represent a sequence of tasks that will be executed as part of the job
+        steps:
+            # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+            - uses: actions/checkout@v2
+            - uses: actions/setup-node@v2-beta
+              with:
+                  node-version: '12'
 
-    # Runs a single command using the runners shell
-    - name: Run a one-line script
-      run: echo Hello, world!
+            - run: yarn install
 
-    # Runs a set of commands using the runners shell
-    - name: Run a multi-line script
-      run: |
-        echo Add other actions to build,
-        echo test, and deploy your project.
+            # Linux build
+            - run: yarn electron:build
+
+            - uses: actions/upload-artifact@v2
+              with:
+                  name: Devtool Linux Appimage
+                  path: dist_electron/devtool*.AppImage
+
+            - uses: actions/upload-artifact@v2
+              with:
+                  name: Devtool Linux Snap
+                  path: dist_electron/devtool*.snap
+
+            - uses: actions/upload-artifact@v2
+              with:
+                  name: Devtool Linux Zip
+                  path: dist_electron/linux-unpacked
+
+            # Windows build
+            - run: yarn electron:build --windows
+
+            - uses: actions/upload-artifact@v2
+              with:
+                  name: Devtool Windows Installer
+                  path: dist_electron/*Setup*.exe
+
+            - uses: actions/upload-artifact@v2
+              with:
+                  name: Devtool Windows Zip
+                  path: dist_electron/win-unpacked
