@@ -7,7 +7,7 @@
                     value
                     }}
                 </el-button>
-                <el-button v-else type="text" icon="el-icon-plus">nommer</el-button>
+                <el-button v-else type="text" icon="el-icon-edit">nommer</el-button>
             </span>
 
             <el-input

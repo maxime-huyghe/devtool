@@ -6,9 +6,7 @@
             size="mini"
             icon="el-icon-plus"
             @click="newNode"
-        >
-            Nouveau
-        </el-button>
+        >Nouveau</el-button>
 
         <el-tree
             v-else
@@ -25,47 +23,41 @@
                 <EditableName v-model="data.label" />
 
                 <!-- Buttons -->
-                <span>
+                <!-- New -->
+                <el-popover placement="right" trigger="hover">
                     <!-- Open -->
                     <el-button
+                        size="mini"
                         type="text"
                         icon="el-icon-edit-outline"
                         @click="onNodeClick(data, node, undefined)"
-                    />
+                    >Ouvrir</el-button>
+
+                    <el-button
+                        size="mini"
+                        type="text"
+                        icon="el-icon-plus"
+                        @click="ev => addChild(ev, node)"
+                    >Enfant</el-button>
+
+                    <el-button
+                        size="mini"
+                        type="text"
+                        icon="el-icon-plus"
+                        @click="ev => addSibling(ev, node)"
+                    >Frère</el-button>
 
                     <!-- Remove -->
                     <el-button
-                        class="mr"
+                        size="mini"
                         type="text"
                         icon="el-icon-delete"
                         @click="ev => removeNode(ev, node)"
-                    />
+                    >Effacer</el-button>
 
-                    <!-- New -->
-                    <el-popover placement="right" trigger="hover">
-                        <el-button
-                            size="mini"
-                            type="text"
-                            icon="el-icon-plus"
-                            @click="ev => addChild(ev, node)"
-                            >Enfant</el-button
-                        >
-                        <el-button
-                            size="mini"
-                            type="text"
-                            icon="el-icon-plus"
-                            @click="ev => addSibling(ev, node)"
-                            >Frère</el-button
-                        >
-
-                        <el-button
-                            slot="reference"
-                            type="text"
-                            icon="el-icon-plus"
-                            @click="ev => addChild(ev, node)"
-                        />
-                    </el-popover>
-                </span>
+                    <el-button slot="reference" type="text" icon="el-icon-plus" />
+                    <!-- @click="ev => addChild(ev, node)" -->
+                </el-popover>
             </span>
         </el-tree>
     </div>
